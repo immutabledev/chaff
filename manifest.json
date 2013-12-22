@@ -1,0 +1,38 @@
+{
+  "name": "Chaff",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "description": "Generate web browsing chaff to obfuscate actual browsing behavior and avoid profiling through 3rd party observation.",
+  "homepage_url": "http://chaff.info",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "default_locale": "en",
+  "background" : { "page": "src/bg/background.html",
+    			   "persistent": true
+  },
+  "options_page": "src/options_custom/index.html",
+  "browser_action": {
+    "default_icon": "icons/icon19.png",
+    "default_title": "Chaff",
+    "default_popup": "src/browser_action/browser_action.html"
+  },
+  "permissions": [
+    "idle",
+    "tabs",
+    "http://*/*",
+    "https://*/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.google.com/*"
+      ],
+      "js": [
+        "src/inject/inject.js"
+      ]
+    }
+  ]
+}
