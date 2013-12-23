@@ -4,6 +4,28 @@ this.manifest = {
     "icon": "icon.png",
     "settings": [
     	{
+            "tab": i18n.get("Settings"),
+            "group": i18n.get("Auto Mode"),
+            "name": "autoMode",
+            "type": "checkbox",
+            "label": "Automatically Run after the Idle Time has Transpired"
+        },
+        {
+            "tab": i18n.get("Settings"),
+            "group": i18n.get("Auto Mode"),
+            "name": "idleTime",
+            "type": "text",
+            "label": "Idle Time",
+            "text": "10"
+        },
+        {
+            "tab": i18n.get("Settings"),
+            "group": i18n.get("Auto Mode"),
+            "name": "idleTimeDesc",
+            "type": "description",
+            "text": "The amount of idle time in minutes that has to transpire before Chaff begins."
+        },
+    	{
             "tab": i18n.get("Sources"),
             "group": i18n.get("Websites"),
             "name": "sourcesWebsiteDesc",
@@ -69,28 +91,6 @@ this.manifest = {
             "group": i18n.get("Websites"),
             "name": "website10",
             "type": "text"
-        },
-        {
-            "tab": i18n.get("Settings"),
-            "group": i18n.get("Timing"),
-            "name": "idleTime",
-            "type": "text",
-            "label": "Idle Time",
-            "text": "10"
-        },
-        {
-            "tab": i18n.get("Settings"),
-            "group": i18n.get("Timing"),
-            "name": "idleTimeDesc",
-            "type": "description",
-            "text": "The amount of idle time in minutes that has to transpire before Chaff begins."
-        },
-        {
-            "tab": i18n.get("Settings"),
-            "group": i18n.get("Behavior"),
-            "name": "runAllTime",
-            "type": "checkbox",
-            "label": "Run Whenever Possible"
         }
     ],
     "alignment": [

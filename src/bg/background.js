@@ -1,17 +1,23 @@
 var settings = new Store("settings", {
 	"processingEnabled": DEFAULTS["processingEnabled"],
+	"autoMode": DEFAULTS["autoMode"],
 	"idleTime": DEFAULTS["idleTime"]
 });
 
-// Initialization
-var processingEnabled = settings.get("processingEnabled");
-var processing = false;
+// Define Globals
+var processingEnabled;
+var processing;
 
-var tabId = undefined;
+var autoMode;
 
-if (processingEnabled) {
-	enableProcessing();
-}
+var tabId;
+
+// Setup event handlers
+chrome.browserAction.onClicked.addListener(
+	function(tab) {
+		toggleProcessing();
+	}	
+);
 
 chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
@@ -33,55 +39,98 @@ chrome.runtime.onMessage.addListener(
   			break;
   	}
 });
+
+chrome.idle.onStateChanged.addListener(
+	function(newstate) {
+		if (autoMode) {
+			switch(newstate) {
+				case "active":
+					stopProcessing();
+					break;
+					
+				case "idle":
+				case "locked":
+					startProcessing();
+					break;
+			}
+		}
+});
+
+window.addEventListener('storage', onStorageEvent, false);
+
+init();
+
+function init() {
+	processingEnabled = settings.get("processingEnabled");
+	processing = false;
+	
+	autoMode = settings.get("autoMode");
+	
+	tabId = undefined;
+	
+	setIdleTime();
+	
+	if (processingEnabled) {
+		enableProcessing();
+	}	
+}
+
+function onStorageEvent(e) {
+	console.log(e);
+	
+	switch(e.key) {
+		case "store.settings.autoMode":
+			autoMode = (e.newValue == "true");
+			break;
+			
+		case "store.settings.idleTime":
+			setIdleTime();
+			break;
+	}
+}
+  
+function toggleProcessing() {
+	if (processing) {
+		stopProcessing();		
+	} else {
+		startProcessing();
+	}	
+}
   
 function enableProcessing() {
 	setProcessingEnabled();
 	
-	// Turn on idle detection
-	// Get idle time in minutes
-	var idleTime = settings.get('idleTime');
-	idleTime *= 60;
-	chrome.idle.setDetectionInterval(idleTime);
-	chrome.idle.onStateChanged.addListener(function(newstate) {
-		if (processingEnabled) {
-		  switch(newstate) {
-			case "active":
-				stopProcessing();
-				break;
-				
-			case "idle":
-			case "locked":
-				startProcessing();
-				break;
-			}
-		}
-	});	
 }
 
 function disableProcessing() {
 	setProcessingDisabled();
 	
-	// Disable timers
 }
 
 function startProcessing() {
-	chrome.browserAction.setBadgeText({text: "On"});
-	
-	console.log("Creating Tab...");
-	// Create a new tab and store the Id for later use
-	chrome.tabs.create({"active": false}, function (tab) {
-		console.log("Tab Created: ["+tab.id+"]");
-		tabId = tab.id;
-	});
+	if (!processing) {
+		processing = true;
+		chrome.browserAction.setBadgeText({text: "On"});
+		
+		console.log("Creating Tab...");
+		// Create a new tab and store the Id for later use
+		chrome.tabs.create({"active": true}, function (tab) {
+			console.log("Tab Created: ["+tab.id+"]");
+			tabId = tab.id;
+		});
+	}
 }
 
 function stopProcessing() {
-	chrome.browserAction.setBadgeText({text: ""});
-	
-	// Remove the tab
-	chrome.tabs.remove(tabId, function (){
-		tabId = undefined;	
-	});
+	if (processing) {
+		processing = false;
+		chrome.browserAction.setBadgeText({text: ""});
+		
+		// Remove the tab
+		chrome.tabs.remove(tabId, function (){
+			tabId = undefined;	
+		});
+	}
 }
 
 function setProcessingEnabled() {
@@ -94,3 +143,9 @@ function setProcessingDisabled() {
 	settings.set("processingEnabled", false);
 }
 
+function setIdleTime() {
+	// Get idle time in minutes
+	var idleTime = settings.get('idleTime');
+	idleTime *= 60;
+	chrome.idle.setDetectionInterval(idleTime);	
+}
