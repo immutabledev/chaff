@@ -1,6 +1,6 @@
 {
   "name": "Chaff",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "manifest_version": 2,
   "description": "Generate web browsing chaff to obfuscate actual browsing behavior and avoid profiling through 3rd party observation.",
   "homepage_url": "http://chaff.info",
@@ -21,17 +21,7 @@
   "permissions": [
     "idle",
     "tabs",
-    "http://*/*",
-    "https://*/*"
-  ],
-  "content_scripts": [
-    {
-      "matches": [
-        "https://www.google.com/*"
-      ],
-      "js": [
-        "src/inject/inject.js"
-      ]
-    }
+    "activeTab",
+    "http://*/*"
   ]
 }
