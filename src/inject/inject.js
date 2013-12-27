@@ -1,6 +1,11 @@
 chrome.extension.onMessage.addListener(function(req, sender, respond) {
+	console.log("inject.js: Message Received! ["+req+"]");
    if (req === 'ScriptRunning') {
        respond('true');
+   } else if (req === 'StopScript') {
+   	   clearTimeout(newPageTimeout);
+   	   console.log("inject.js: StopScript received.");
+   	   respond('true');
    }
 });
 
@@ -29,7 +34,7 @@ if (links.length > 0) {
 
 	var delay = randInt(6,25)*1000;
 	console.log("New URL: ["+links[selectedLink]+"] in "+delay+"ms");
-	setTimeout(
+	var newPageTimeout = setTimeout(
 		function() {
 	        window.location = links[selectedLink];
 	    }

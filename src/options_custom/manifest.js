@@ -25,6 +25,13 @@ this.manifest = {
             "type": "description",
             "text": "The amount of idle time in minutes that has to transpire before Chaff begins."
         },
+        {
+            "tab": i18n.get("Settings"),
+            "group": i18n.get("Tab Behavior"),
+            "name": "removeTabWhenFinished",
+            "type": "checkbox",
+            "label": "Remove tab created by extension when turned off."
+        },
     	{
             "tab": i18n.get("Sources"),
             "group": i18n.get("Websites"),

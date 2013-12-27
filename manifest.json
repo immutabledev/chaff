@@ -1,6 +1,6 @@
 {
   "name": "Chaff",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "manifest_version": 2,
   "description": "Generate web browsing chaff to obfuscate actual browsing behavior and avoid profiling through 3rd party observation.",
   "homepage_url": "http://chaff.info",
@@ -21,7 +21,7 @@
   "permissions": [
     "idle",
     "tabs",
-    "activeTab",
-    "http://*/*"
+    "http://*/*",
+    "https://*/*"
   ]
 }

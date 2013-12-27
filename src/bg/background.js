@@ -7,7 +7,12 @@ var settings = new Store("settings", {
 	"website3": DEFAULTS["website3"],
 	"website4": DEFAULTS["website4"],
 	"website5": DEFAULTS["website5"],
-	"website6": DEFAULTS["website6"]
+	"website6": DEFAULTS["website6"],
+	"website7": DEFAULTS["website7"],
+	"website8": DEFAULTS["website8"],
+	"website9": DEFAULTS["website9"],
+	"website10": DEFAULTS["website10"],
+	"removeTabWhenFinished": DEFAULTS["removeTabWhenFinished"]
 });
 
 // Define Globals
@@ -92,9 +97,8 @@ chrome.tabs.onRemoved.addListener(
 
 chrome.tabs.onUpdated.addListener(
 	function(updatedTabId, changeInfo, tab) {
-		console.log("Tab Updated: ["+updatedTabId+"] ["+changeInfo.status+"]")
 		if (updatedTabId != tabId || changeInfo.status != 'complete') return;
-		
+		console.log("Tab Updated: ["+updatedTabId+"] ["+changeInfo.status+"]");
 		tabUpdated(tab);
 	}	
 );
@@ -184,8 +188,12 @@ function stopProcessing() {
 		if (browsingTimeout) clearTimeout(browsingTimeout);
 		if (historyTimeout) clearTimeout(historyTimeout);
 		
-		// Remove the tab
-		if (tabId != undefined) {
+		chrome.tabs.sendMessage(tabId, "StopScript", function(response) {
+  			console.log("Inject Script Stopped: ["+response+"]");
+		});
+		
+		// Remove the tab if requested
+		if (settings.get("removeTabWhenFinished") && tabId != undefined) {
 			try {
 				chrome.tabs.remove(tabId, function (){
 					tabId = undefined;	
@@ -193,6 +201,8 @@ function stopProcessing() {
 			} catch(e) {
 				console.log("Unable to remove Tab ID: ["+tabId+"]");
 			}
+		} else {
+			tabId = undefined;
 		}
 	}
 }
@@ -246,7 +256,7 @@ function tabUpdated(tab) {
 		beginBrowsing();
 	}
 	
-	// If detected language of page isn't desired, back up
+	// TODO: If detected language of page isn't desired, back up
   	chrome.tabs.detectLanguage(tabId, 
   		function(language) {
     		console.log("Tab Language: ["+language+"]");
