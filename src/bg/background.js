@@ -1,21 +1,6 @@
-var settings = new Store("settings", {
-	"processingEnabled": DEFAULTS["processingEnabled"],
-	"autoMode": DEFAULTS["autoMode"],
-	"idleTime": DEFAULTS["idleTime"],
-	"website1": DEFAULTS["website1"],
-	"website2": DEFAULTS["website2"],
-	"website3": DEFAULTS["website3"],
-	"website4": DEFAULTS["website4"],
-	"website5": DEFAULTS["website5"],
-	"website6": DEFAULTS["website6"],
-	"website7": DEFAULTS["website7"],
-	"website8": DEFAULTS["website8"],
-	"website9": DEFAULTS["website9"],
-	"website10": DEFAULTS["website10"],
-	"removeTabWhenFinished": DEFAULTS["removeTabWhenFinished"]
-});
-
 // Define Globals
+var settings;
+
 var processingEnabled;
 var processing;
 var manualProcessing;
@@ -26,8 +11,6 @@ var seedURLs;
 
 var tabId;
 var currentTab;
-
-var retryCount;
 
 // Used to track if a browsing timeout occurred for the Tab Updated event
 var browsingTimeout;
@@ -108,6 +91,8 @@ window.addEventListener('storage', onStorageEvent, false);
 init();
 
 function init() {
+	settings = new Store("settings", DEFAULTS);
+	
 	processingEnabled = settings.get("processingEnabled");
 	processing = false;
 	manualProcessing = false;
@@ -139,6 +124,19 @@ function onStorageEvent(e) {
 		case "store.settings.idleTime":
 			setIdleTime();
 			break;
+			
+		case "store.settings.website1":
+		case "store.settings.website2":
+		case "store.settings.website3":
+		case "store.settings.website4":
+		case "store.settings.website5":
+		case "store.settings.website6":
+		case "store.settings.website7":
+		case "store.settings.website8":
+		case "store.settings.website9":
+		case "store.settings.website10":
+			gatherSeedURLs();
+			break;
 	}
 }
   
@@ -153,13 +151,13 @@ function toggleProcessing() {
 }
   
 function enableProcessing() {
-	setProcessingEnabled();
-	
+	processingEnabled = true;	
+	settings.set("processingEnabled", true);
 }
 
 function disableProcessing() {
-	setProcessingDisabled();
-	
+	processingEnabled = false;	
+	settings.set("processingEnabled", false);
 }
 
 function startProcessing() {
@@ -208,8 +206,6 @@ function stopProcessing() {
 }
 
 function beginBrowsing() {
-	retryCount = 0;
-	
 	// Get the seed URL
 	var seedURL = getSeedURL();
 	
@@ -227,7 +223,7 @@ function startBrowseTimeout() {
 }
 
 function browseError() {
-	var browseTimeoutNewURLtmp = history[currentSeed].pop(); // This one is the back URL
+	var browseTimeoutNewURLtmp = history[currentSeed].pop(); // This one is the bad URL
 	browseTimeoutNewURLtmp = history[currentSeed].pop();
 	
 	if (browseTimeoutNewURLtmp == browseTimeoutNewURL) {
@@ -301,19 +297,9 @@ function getSeedURL() {
 	BROWSING_PARAMETERS['siteDepth'] = randInt(5, 10);
 	
 	// Number of pages to visit based upon a seed site
-	BROWSING_PARAMETERS['depth'] =  randInt(BROWSING_PARAMETERS['siteDepth']*1.5, 20);
+	BROWSING_PARAMETERS['depth'] =  randInt(Math.ceil(BROWSING_PARAMETERS['siteDepth']*1.5), 20);
 	
 	return seedURLs[currentSeed];
-}
-
-function setProcessingEnabled() {
-	processingEnabled = true;	
-	settings.set("processingEnabled", true);
-}
-
-function setProcessingDisabled() {
-	processingEnabled = false;	
-	settings.set("processingEnabled", false);
 }
 
 function analyzeHistory(currentURL) {
@@ -364,29 +350,19 @@ function getDomain(url) {
 function inject() {
 	console.log("Injecting into tab ["+tabId+"].");
 	try {
-		chrome.tabs.executeScript(tabId, { file: "src/inject/inject.js" }, 
+		chrome.tabs.executeScript(tabId, { file: "src/inject/removeAudio.js", allFrames: true, runAt: "document_end" },
 			function() {
-		    	saveHistory();
-	   		}
-	   	);
+				chrome.tabs.executeScript(tabId, { file: "src/inject/inject.js" }, 
+					function() {
+		    			saveHistory();
+	   				}
+	   			);
+	   		}	
+	   );
 	} catch(e) {
-		injectError();
+		// Let the Browse Timeout occur to handle this case
+		console.log("!!Error occurred when trying to inject into tab.");
 	}
-}
-
-// There was an issue loading the page; Back up and try again.
-function injectError() {
-	console.log("Timeout occurred while injecting.");
-	var currentHistory = history[currentSeed];
-	
-	if (currentHistory.length > 0) {
-		retryCount++;
-		console.log(">>Trying previous URL again ["+history[currentSeed][currentHistory.length-1]+"]. Retry ["+retryCount+"].");
-		browse(history[currentSeed][currentHistory.length-1]);
-	} else { // Issue with seed site, so we need to start again with a new seed
-		console.log(">>Starting again with a new seed.");
-		beginBrowsing();
-	}		
 }
 
 // Remeber the links we've been to
@@ -394,7 +370,6 @@ function saveHistory() {
 	if (currentTab != undefined) {
 		history[currentSeed].push(currentTab.url);
 		console.log("URL ["+currentTab.url+"] saved in History for seed ["+currentSeed+"], depth ["+history[currentSeed].length+"].");
-		retryCount = 0;
 	}	
 }
 

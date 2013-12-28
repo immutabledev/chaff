@@ -9,12 +9,6 @@ chrome.extension.onMessage.addListener(function(req, sender, respond) {
    }
 });
 
-console.log("inject.js running!");
-
-console.log("___Removing Audio Sources___");
-removeAudioSources();
-console.log("___End Removing Audio Sources___");
-
 var linksOnPage = document.getElementsByTagName('a');
 
 // Filter the list of links
@@ -41,39 +35,6 @@ if (links.length > 0) {
 	, delay); 
 } else {
 	console.log("!!No links found.");	
-}
-
-function removeAudioSources() {
-	var sources = ["applet", "audio", "embed", "object", "video"];
-	var i, j;
-	
-	for(i=0; i<sources.length; ++i) {
-		removeElements(document.getElementsByTagName(sources[i]));
-	}
-	
-	/*console.log(">>>Getting iFrames<<<");
-	var iframes = document.getElementsByTagName('iframe');
-	console.log(">>>Finished Getting iFrames<<<");
-	for(i=0; i<iframes.length; i++) {
-		for(j=0; j<sources.length; ++j) {
-			if (iframes[i] !== null && iframes[i] !== undefined) {
-				//removeElements(iframes[i].contentDocument.getElementsByTagName(sources[j]));
-			}
-		}
-	}*/
-}
-
-function removeElements(elements) {
-	for(var i=0; i<elements.length; i++) {
-		console.log("!!Removing element.");
-		if (elements[i] !== null && elements[i] !== undefined && elements[i].parentNode !== null) {
-			try {
-				node.parentNode.removeChild(elements[i]);
-			} catch(e) {
-				console.log("!!!Error removing element.");
-			}
-		}
-	}	
 }
 
 function randInt (min, max) {
