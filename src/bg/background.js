@@ -24,6 +24,8 @@ var history;
 
 var BROWSING_PARAMETERS = [];
 
+var SeedService;
+
 // Setup event handlers
 chrome.browserAction.onClicked.addListener(
 	function(tab) {
@@ -108,9 +110,14 @@ function init() {
 	
 	gatherSeedURLs();
 	
-	if (processingEnabled) {
-		enableProcessing();
-	}	
+	SeedService = new Seed();
+	SeedService.gatherSeeds(
+		function() {
+				if (processingEnabled) {
+					enableProcessing();
+				}			
+		}
+	);       
 }
 
 function onStorageEvent(e) {
@@ -206,10 +213,42 @@ function stopProcessing() {
 }
 
 function beginBrowsing() {
-	// Get the seed URL
-	var seedURL = getSeedURL();
+	// Initialize Browsing Parameters; TODO: Finish initializing parameters
+	// Number of pages to browse on a particular site
+	BROWSING_PARAMETERS['siteDepth'] = randInt(5, 10);
 	
-	browse(seedURL);
+	// Number of pages to visit based upon a seed site
+	BROWSING_PARAMETERS['depth'] =  randInt(Math.ceil(BROWSING_PARAMETERS['siteDepth']*1.5), 20);
+	
+	// Clear History
+	history = [];
+	
+	//var decision = randInt(1,2);
+	var decision = 2;
+	var seedURL = "";
+	
+	switch (decision) {
+		case 1:
+			// Get a user provided seed URL
+			seedURL = getSeedURL();
+			browse(seedURL);
+			break;
+		
+		case 2:
+			SeedService.getSearchSeed(
+				function(phrase) {
+					if (phrase == null) {
+						console.log("No seed phrase returned! Restarting the Browse.");
+						beginBrowsing();	
+					} else {
+						seedURL = "http://www.google.com/search?q="+encodeURIComponent(phrase);
+						browse(seedURL);
+					}
+				}
+			);
+			break;
+	}
+	
 }
 
 function browse(url) {
@@ -223,12 +262,12 @@ function startBrowseTimeout() {
 }
 
 function browseError() {
-	var browseTimeoutNewURLtmp = history[currentSeed].pop(); // This one is the bad URL
-	browseTimeoutNewURLtmp = history[currentSeed].pop();
+	var browseTimeoutNewURLtmp = history.pop(); // This one is the bad URL
+	browseTimeoutNewURLtmp = history.pop();
 	
 	if (browseTimeoutNewURLtmp == browseTimeoutNewURL) {
 		console.log("!!Browse Timeout: Timed out from same URL last time. Backing up one more. ["+browseTimeoutNewURLtmp+"] == ["+browseTimeoutNewURL+"]")
-		browseTimeoutNewURLtmp = history[currentSeed].pop();	
+		browseTimeoutNewURLtmp = history.pop();	
 	}
 	
 	browseTimeoutNewURL = browseTimeoutNewURLtmp;
@@ -247,7 +286,7 @@ function tabUpdated(tab) {
 	currentTab = tab;
 	
 	// If the browsing history has exceeded the pre-determined depth, begin again with a new seed
-	if (history[currentSeed].length > BROWSING_PARAMETERS['depth']) {
+	if (history.length > BROWSING_PARAMETERS['depth']) {
 		console.log("!!!Browsing Depth of ["+BROWSING_PARAMETERS['depth']+"] exceeded. Reseeding.");
 		beginBrowsing();
 	}
@@ -285,19 +324,9 @@ function getSeedURL() {
 	var numURLs = seedURLs.length;
 	
 	// Select a random URL
-	currentSeed = randInt(0, numURLs-1);
+	var currentSeed = randInt(0, numURLs-1);
 	
-	// Clear History
-	history[currentSeed] = [];
-	console.log("Out of ["+numURLs+"] URLs, selected URL number ["+currentSeed+"] = ["+seedURLs[currentSeed]+"].");
-	
-	
-	// Initialize Browsing Parameters; TODO: Finish initializing parameters
-	// Number of pages to browse on a particular site
-	BROWSING_PARAMETERS['siteDepth'] = randInt(5, 10);
-	
-	// Number of pages to visit based upon a seed site
-	BROWSING_PARAMETERS['depth'] =  randInt(Math.ceil(BROWSING_PARAMETERS['siteDepth']*1.5), 20);
+	console.log("Out of ["+numURLs+"] URLs, selected URL ["+seedURLs[currentSeed]+"] = ["+seedURLs[currentSeed]+"].");
 	
 	return seedURLs[currentSeed];
 }
@@ -306,12 +335,12 @@ function analyzeHistory(currentURL) {
 	var status = "";
 	
 	// See if the browsing history indicates the script is stuck on the same website for too long
-	if (history[currentSeed].length > BROWSING_PARAMETERS['siteDepth']) {
+	if (history.length > BROWSING_PARAMETERS['siteDepth']) {
 		var tld = getDomain(currentURL);
 		var count = 0;
 		console.log("Analyzing History [Staleness]: Domain ["+tld+"], Depth ["+BROWSING_PARAMETERS['siteDepth']+"].");
-		for(var i = history[currentSeed].length-1; i>=0; i--) {
-			var domain = getDomain(history[currentSeed][i]);
+		for(var i = history.length-1; i>=0; i--) {
+			var domain = getDomain(history[i]);
 			//console.log(">>Found Domain: ["+domain+"]");	
 			if (domain == tld) {
 				count++;
@@ -323,9 +352,9 @@ function analyzeHistory(currentURL) {
 			if (count > BROWSING_PARAMETERS['siteDepth']) {
 				console.log(">>>>More than ["+BROWSING_PARAMETERS['siteDepth']+"] matches for domain ["+tld+"].");
 				for(var j = i; j>=0; j--) {
-					status = history[currentSeed][j];
+					status = history[j];
 
-					if (getDomain(history[currentSeed][j]) != tld) break;	
+					if (getDomain(history[j]) != tld) break;	
 				}
 				
 				break;
@@ -368,8 +397,8 @@ function inject() {
 // Remeber the links we've been to
 function saveHistory() {
 	if (currentTab != undefined) {
-		history[currentSeed].push(currentTab.url);
-		console.log("URL ["+currentTab.url+"] saved in History for seed ["+currentSeed+"], depth ["+history[currentSeed].length+"].");
+		history.push(currentTab.url);
+		console.log("URL ["+currentTab.url+"] saved in History, depth ["+history.length+"].");
 	}	
 }
 

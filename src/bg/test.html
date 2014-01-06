@@ -1,0 +1,22 @@
+<script type="text/javascript" src="../../js/jquery.js"></script>
+<script type="text/javascript" src="seed.js"></script>
+<script type="text/javascript">
+
+function randInt (min, max) {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+var s = new Seed();
+
+s.gatherSeeds(gatherSeedsCallback);
+
+function gatherSeedsCallback() {
+	console.log("Gather Seeds Callback.");
+	s.getSearchSeed(getSeedCallback);
+}
+
+function getSeedCallback(url) {
+	console.log("Callback Phrase: ["+url+"]");
+}
+
+</script>

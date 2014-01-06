@@ -9,6 +9,12 @@ chrome.extension.onMessage.addListener(function(req, sender, respond) {
    }
 });
 
+var googleSearch = false;
+if (/^https?:\/\/www\.google\.com\/search/.test(window.location)) {
+	//console.log(">>Google Search Page Detected<<");
+	googleSearch = true;
+}
+
 var linksOnPage = document.getElementsByTagName('a');
 
 // Filter the list of links
@@ -16,9 +22,14 @@ var links = [];
 for(var i=0; i<linksOnPage.length; ++i) {
 	// Remove any link that does not begin with http or https or is a Bookmark
 	if (/^http/.test(linksOnPage[i]) && !/#\w*$/.test(linksOnPage[i])) {
-		links.push(linksOnPage[i]);
+		if (googleSearch && /^https?:\/\/[^\/]*google[^\/]*\//.test(linksOnPage[i])) {
+			//console.log("Google Search and Google URL Detected, skipping: ["+linksOnPage[i]+"]");
+		} else {
+			links.push(linksOnPage[i]);
+			//console.log("Link: ["+linksOnPage[i]+"]");
+		}
 	} else {
-		console.log("Bad Link: ["+linksOnPage[i]+"]");
+		//console.log("Bad Link: ["+linksOnPage[i]+"]");
 	}
 }
 
