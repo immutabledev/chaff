@@ -12,5 +12,9 @@ var DEFAULTS = {
 	"website8": "",
 	"website9": "",
 	"website10": "",
-	"removeTabWhenFinished": false
+	"minTimeBetweenClicks": 6,
+	"maxTimeBetweenClicks": 20,
+	"removeTabWhenFinished": false,
+	"languageDetectionEnabled": true,
+	"preferredLanguage": "en"
 };

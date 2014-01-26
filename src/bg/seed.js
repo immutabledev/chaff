@@ -1,6 +1,9 @@
+
 function Seed () {
     this.categories = [];
     this.categoriesGathered = false;
+    
+    this.seedURLs = [];
     
     this.grabBag = [];   
 };
@@ -14,7 +17,7 @@ Seed.prototype.gatherSeeds = function (callback) {
 		dataType: 'json',
 		error: function() {
     		console.log("!!Error gathering categories from Feedzilla.");
-    		callback();
+    		callback(false);
 		},
 		success: function(result) {
 			var tmp = [];
@@ -25,7 +28,7 @@ Seed.prototype.gatherSeeds = function (callback) {
     		
     		//console.log("tmp length: ["+tmp.length+"]");
     		that.setCategories(tmp);
-    		callback();
+    		callback(true);
 		} 
 	});
 };
@@ -35,28 +38,62 @@ Seed.prototype.setCategories = function (cats) {
 	this.categoriesGathered = true;
 };
 
-Seed.prototype.getSearchSeed = function (callback) {
-	//console.log("Length: ["+this.categories.length+"]");
-	var strategy = randInt(1,2);
-	switch (strategy) {
+Seed.prototype.setSeedURLs = function (urls) {
+	this.seedURLs = [];
+	
+	for(var i=0; i<urls.length; i++) {
+		urls[i] = urls[i].trim;
+		if (/^http/.test(urls[i])) {
+			console.log("Adding seed URL: ["+urls[i]+"].");
+			this.seedURLs.push(urls[i]);
+		}
+	}	
+};
+
+Seed.prototype.getSeed = function(callback) {
+	var decision = randInt(1,3);
+	//var decision = 1;
+	var seedURL = "";
+	
+	switch (decision) {
 		case 1:
-			console.log("Grab Bag Title Selected. ["+this.grabBag.length+"]");
-			if (this.grabBag.length > 0) {
-				callback(createPhrase(this.grabBag.pop()));
-				break;	
+			if (this.categoriesGathered) {
+				this.getSearchSeed(
+					function(phrase) {
+						if (phrase == null) {
+							console.log("No seed phrase returned! Retrying.");
+							this.getSeed();
+						} else {
+							seedURL = "http://www.google.com/search?q="+encodeURIComponent(phrase);
+							callback(seedURL);
+						}
+					}
+				);
+				break;
 			}
 		case 2:
-			if (this.categoriesGathered) {
-				var i = randInt(0, this.categories.length-1);
-				var rssURL = "http://api.feedzilla.com/v1/categories/"+this.categories[i].category_id+"/subcategories/"+this.categories[i].subcategory_id+"/articles.json";
-				console.log("Selected random URL: ["+rssURL+"]");
-				getRandomPhrase(rssURL, callback, this);
-			} else {
-				callback(null);
+			console.log("Grab Bag Title Selected. ["+this.grabBag.length+"]");
+			if (this.grabBag.length > 0) {
+				var randomGrabBag = randInt(0, this.grabBag.length-1);
+				var gb = this.grabBag.splice(randomGrabBag, 1);
+				console.log("Grab Bag: ["+gb+"]");
+				callback(createPhrase(gb));
+				break;	
 			}
+		case 3:
+			// Get a user provided seed URL
+			seedURL = getSeedURL(this);
+			callback(seedURL);
 			break;
-	}
-	
+		
+	}	
+};
+
+Seed.prototype.getSearchSeed = function (callback) {
+	var i = randInt(0, this.categories.length-1);
+	var rssURL = "http://api.feedzilla.com/v1/categories/"+this.categories[i].category_id+"/subcategories/"+this.categories[i].subcategory_id+"/articles.json";
+	console.log("Selected random URL: ["+rssURL+"]");
+	getRandomPhrase(rssURL, callback, this);
 };	
 	
 function getRandomPhrase(rssURL, callback, that) {
@@ -97,23 +134,162 @@ function getRandomPhrase(rssURL, callback, that) {
 	});	
 }
 
+function getSeedURL(that) {
+	var seedURL = null;
+	
+	if (that.seedURLs.length > 0) {
+		var i = randInt(0, that.seedURLs.length-1);
+		seedURL = that.seedURLs[i];
+	}
+	
+	return seedURL;
+}
+
 function createPhrase(phrase) {
-	var words = phrase.split(/\s+/);
+	var newPhrase = "";
+	if ((typeof phrase == 'string' || phrase instanceof String) && phrase != "") {
+		
+	} else {
+		phrase.toString();
+	}
+	
+	try {
+		var words = phrase.replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()]/g,"").toLowerCase().split(/\s+/);
+	} catch (e) {
+		return newPhrase;
+	}
+	words = words.filter(isPreposistion);
+	words = words.filter(isIndefiniteArticle);
 	var phraseLength = randInt(Math.round(words.length/5), Math.floor(words.length/1.5));
 	
 	// Ensure phrase is at least 1 word
 	phraseLength = (phraseLength < 1) ? 1 : phraseLength; 
 	
-	var newPhrase = "";
 	//console.log("Phrase Length: ["+phraseLength+"]");
 	for(var i=0; i<phraseLength; i++) {
 		if (!/^\w/.test(words[i])) break;
 		
 		if (i != 0) newPhrase += " ";
 		
-		newPhrase += words[i].replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()]/g,"").toLowerCase();
+		newPhrase += words[i];
 	}
 	
 	return newPhrase;	
 }
 
+function isPreposistion(val) {
+	return PREPOSITIONS.indexOf(val) == -1;	
+}
+
+function isIndefiniteArticle(val) {
+	return INDEFINITE_ARTICLES.indexOf(val) == -1;
+}
+
+var PREPOSITIONS = [
+  "a",
+  "abaft",
+  "aboard",
+  "about",
+  "above",
+  "absent",
+  "across",
+  "afore",
+  "after",
+  "against",
+  "along",
+  "alongside",
+  "amid",
+  "amidst",
+  "among",
+  "amongst",
+  "an",
+  "anenst",
+  "apropos",
+  "apud",
+  "around",
+  "as",
+  "aside",
+  "astride",
+  "at",
+  "athwart",
+  "atop",
+  "barring",
+  "before",
+  "behind",
+  "below",
+  "beneath",
+  "beside",
+  "besides",
+  "between",
+  "beyond",
+  "but",
+  "by",
+  "circa",
+  "concerning",
+  "despite",
+  "down",
+  "during",
+  "except",
+  "excluding",
+  "failing",
+  "following",
+  "for",
+  "forenenst",
+  "from",
+  "given",
+  "in",
+  "including",
+  "inside",
+  "into",
+  "lest",
+  "like",
+  "mid",
+  "midst",
+  "minus",
+  "modulo",
+  "near",
+  "next",
+  "notwithstanding",
+  "of",
+  "off",
+  "on",
+  "onto",
+  "opposite",
+  "out",
+  "outside",
+  "over",
+  "pace",
+  "past",
+  "per",
+  "plus",
+  "pro",
+  "qua",
+  "regarding",
+  "round",
+  "sans",
+  "save",
+  "since",
+  "than",
+  "through",
+  "throughout",
+  "till",
+  "times",
+  "to",
+  "toward",
+  "towards",
+  "under",
+  "underneath",
+  "unlike",
+  "until",
+  "unto",
+  "up",
+  "upon",
+  "versus",
+  "via",
+  "vice",
+  "with",
+  "within",
+  "without",
+  "worth"
+];
+var INDEFINITE_ARTICLES = ["a", "an", "the"];

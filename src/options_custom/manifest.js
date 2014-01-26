@@ -98,6 +98,30 @@ this.manifest = {
             "group": i18n.get("Websites"),
             "name": "website10",
             "type": "text"
+        },
+        ,
+    	{
+            "tab": i18n.get("Tuning"),
+            "group": i18n.get("Browsing"),
+            "name": "timeBetweenClicksDesc",
+            "type": "description",
+            "text": "The next randomly chosen link will be visted at a random time in seconds, choosen within the range defined below."
+        },
+        {
+            "tab": i18n.get("Tuning"),
+            "group": i18n.get("Browsing"),
+            "name": "minTimeBetweenClicks",
+            "type": "text",
+            "label": "Minimum Time Between Clicks (seconds)",
+            "text": "6"
+        },
+        {
+            "tab": i18n.get("Tuning"),
+            "group": i18n.get("Browsing"),
+            "name": "maxTimeBetweenClicks",
+            "type": "text",
+            "label": "Maximum Time Between Clicks (seconds)",
+            "text": "20"
         }
     ],
     "alignment": [

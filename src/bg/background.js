@@ -25,6 +25,7 @@ var history;
 var BROWSING_PARAMETERS = [];
 
 var SeedService;
+var SeedServiceInitialized;
 
 // Setup event handlers
 chrome.browserAction.onClicked.addListener(
@@ -108,14 +109,14 @@ function init() {
 	
 	setIdleTime();
 	
+	SeedServiceInitialized = false;
+	SeedService = new Seed();
+	
 	gatherSeedURLs();
 	
-	SeedService = new Seed();
 	SeedService.gatherSeeds(
-		function() {
-				if (processingEnabled) {
-					enableProcessing();
-				}			
+		function(success) {
+				SeedServiceInitialized = success;			
 		}
 	);       
 }
@@ -193,22 +194,33 @@ function stopProcessing() {
 		if (browsingTimeout) clearTimeout(browsingTimeout);
 		if (historyTimeout) clearTimeout(historyTimeout);
 		
-		chrome.tabs.sendMessage(tabId, "StopScript", function(response) {
-  			console.log("Inject Script Stopped: ["+response+"]");
-		});
+		stopScript();
+	}
+}
+
+
+function stopScript() {
+	console.log("Stopping Script...");
+	chrome.tabs.executeScript(tabId, { code: 'clearTimeout(newPageTimeout);'}, function(){
+	//chrome.tabs.sendMessage(tabId, "StopScript", function(response) {
+	//	console.log("Inject Script Stopped: ["+response+"]");
 		
-		// Remove the tab if requested
-		if (settings.get("removeTabWhenFinished") && tabId != undefined) {
-			try {
-				chrome.tabs.remove(tabId, function (){
-					tabId = undefined;	
-				});
-			} catch(e) {
-				console.log("Unable to remove Tab ID: ["+tabId+"]");
-			}
-		} else {
-			tabId = undefined;
+		killTab();
+	});	
+}
+
+function killTab() {
+	// Remove the tab if requested
+	if (settings.get("removeTabWhenFinished") && tabId != undefined) {
+		try {
+			chrome.tabs.remove(tabId, function (){
+				tabId = undefined;	
+			});
+		} catch(e) {
+			console.log("Unable to remove Tab ID: ["+tabId+"]");
 		}
+	} else {
+		tabId = undefined;
 	}
 }
 
@@ -223,32 +235,16 @@ function beginBrowsing() {
 	// Clear History
 	history = [];
 	
-	//var decision = randInt(1,2);
-	var decision = 2;
-	var seedURL = "";
-	
-	switch (decision) {
-		case 1:
-			// Get a user provided seed URL
-			seedURL = getSeedURL();
-			browse(seedURL);
-			break;
-		
-		case 2:
-			SeedService.getSearchSeed(
-				function(phrase) {
-					if (phrase == null) {
-						console.log("No seed phrase returned! Restarting the Browse.");
-						beginBrowsing();	
-					} else {
-						seedURL = "http://www.google.com/search?q="+encodeURIComponent(phrase);
-						browse(seedURL);
-					}
-				}
-			);
-			break;
-	}
-	
+	SeedService.getSeed(
+		function(url) {
+			if (url == null) {
+				console.log("No seed returned! Restarting the Browse.");
+				beginBrowsing();	
+			} else {
+				browse(url);
+			}
+		}
+	);
 }
 
 function browse(url) {
@@ -258,7 +254,7 @@ function browse(url) {
 
 function startBrowseTimeout() {
 	clearTimeout(browsingTimeout);	
-	browsingTimeout = setTimeout(browseError, 60000);	
+	browsingTimeout = setTimeout(browseError, 30000+randInt(10,30)*1000);	
 }
 
 function browseError() {
@@ -281,54 +277,55 @@ function browseError() {
 }
 
 function tabUpdated(tab) {
-	startBrowseTimeout();
-	
-	currentTab = tab;
-	
-	// If the browsing history has exceeded the pre-determined depth, begin again with a new seed
-	if (history.length > BROWSING_PARAMETERS['depth']) {
-		console.log("!!!Browsing Depth of ["+BROWSING_PARAMETERS['depth']+"] exceeded. Reseeding.");
-		beginBrowsing();
-	}
-	
-	// TODO: If detected language of page isn't desired, back up
-  	chrome.tabs.detectLanguage(tabId, 
-  		function(language) {
-    		console.log("Tab Language: ["+language+"]");
-  		});
-	
-	// Analyze the browsing history to determine if a change in behavior is necessary
-	var alternateURL = "";
-	
-	if (!historyAnalyzedLastPass) {
-		alternateURL = analyzeHistory(tab.url);
+	if (processing) {
+		startBrowseTimeout();
+		
+		currentTab = tab;
+		
+		// If the browsing history has exceeded the pre-determined depth, begin again with a new seed
+		if (history.length > BROWSING_PARAMETERS['depth']) {
+			console.log("!!!Browsing Depth of ["+BROWSING_PARAMETERS['depth']+"] exceeded. Reseeding.");
+			beginBrowsing();
+		}
+		
+		// TODO: If detected language of page isn't desired, back up
+	  	chrome.tabs.detectLanguage(tabId, 
+	  		function(language) {
+	  			if (settings.get("languageDetectionEnabled")) {
+	    			console.log("Tab Language: ["+language+"]");
+	    			
+	    			var languageToDetect = settings.get("preferredLanguage");
+	    			var langExp = new RegExp("^"+languageToDetect, "i");
+	    			if (!langExp.test(language.toLower())) {
+	    				console.log("A different language detected, backing up.")
+	    				browseError();
+	    			}
+	    		}
+	  		});
+		
+		// Analyze the browsing history to determine if a change in behavior is necessary
+		var alternateURL = "";
+		
+		if (!historyAnalyzedLastPass) {
+			alternateURL = analyzeHistory(tab.url);
+		} else {
+			historyAnalyzedLastPass = false;
+		}
+		
+		if (alternateURL != "") {
+			historyTimeout = setTimeout(
+				function() {
+					historyAnalyzedLastPass = true;
+			    	browse(alternateURL);
+			    }
+			, 20000); // 20 Seconds		 
+		} else {
+			// Inject some JavaScript to determine the next page to visit
+			inject();	
+		}
 	} else {
-		historyAnalyzedLastPass = false;
+		stopProcessing();
 	}
-	
-	if (alternateURL != "") {
-		historyTimeout = setTimeout(
-			function() {
-				historyAnalyzedLastPass = true;
-		    	browse(alternateURL);
-		    }
-		, 20000); // 20 Seconds		 
-	} else {
-		// Inject some JavaScript to determine the next page to visit
-		inject();	
-	}
-}
-
-function getSeedURL() {
-	// Determine number of URLs
-	var numURLs = seedURLs.length;
-	
-	// Select a random URL
-	var currentSeed = randInt(0, numURLs-1);
-	
-	console.log("Out of ["+numURLs+"] URLs, selected URL ["+seedURLs[currentSeed]+"] = ["+seedURLs[currentSeed]+"].");
-	
-	return seedURLs[currentSeed];
 }
 
 function analyzeHistory(currentURL) {
@@ -381,9 +378,13 @@ function inject() {
 	try {
 		chrome.tabs.executeScript(tabId, { file: "src/inject/removeAudio.js", allFrames: true, runAt: "document_end" },
 			function() {
-				chrome.tabs.executeScript(tabId, { file: "src/inject/inject.js" }, 
+				chrome.tabs.executeScript(tabId, { code: "var scriptOptions = { minTimeBetweenClicks: "+settings.get("minTimeBetweenClicks")+", maxTimeBetweenClicks: "+settings.get("maxTimeBetweenClicks")+" };" }, 
 					function() {
-		    			saveHistory();
+						chrome.tabs.executeScript(tabId, { file: "src/inject/inject.js" }, 
+							function() {
+		    					saveHistory();
+	   						}	
+	   					);
 	   				}
 	   			);
 	   		}	
@@ -403,15 +404,14 @@ function saveHistory() {
 }
 
 function gatherSeedURLs() {
-	seedURLs = [];
+	var seedURLs = [];
 	
 	for(i=1; i<=10; i++) {
-		var tmp = settings.get("website"+i);
-		if (/^http/.test(tmp)) {
-			console.log("Adding seed URL: ["+tmp+"].");
-			seedURLs.push(tmp);
-		}
+		seedURLs.push(settings.get("website"+i));
 	}
+	
+	SeedService.setSeedURLs(seedURLs);
+	console.log("Seed URLs gathered.");
 }
 
 function setIdleTime() {
