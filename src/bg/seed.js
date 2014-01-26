@@ -64,8 +64,7 @@ Seed.prototype.getSeed = function(callback) {
 							console.log("No seed phrase returned! Retrying.");
 							this.getSeed();
 						} else {
-							seedURL = "http://www.google.com/search?q="+encodeURIComponent(phrase);
-							callback(seedURL);
+							callback(generateGoogleSearchURL(phrase));
 						}
 					}
 				);
@@ -76,8 +75,9 @@ Seed.prototype.getSeed = function(callback) {
 			if (this.grabBag.length > 0) {
 				var randomGrabBag = randInt(0, this.grabBag.length-1);
 				var gb = this.grabBag.splice(randomGrabBag, 1);
-				console.log("Grab Bag: ["+gb+"]");
-				callback(createPhrase(gb));
+				var p = createPhrase(gb);
+				console.log("Grab Bag: ["+gb+"]["+p+"]");
+				callback(generateGoogleSearchURL(p));
 				break;	
 			}
 		case 3:
@@ -134,6 +134,10 @@ function getRandomPhrase(rssURL, callback, that) {
 	});	
 }
 
+function generateGoogleSearchURL(phrase) {
+	return "http://www.google.com/search?q="+encodeURIComponent(phrase);	
+}
+
 function getSeedURL(that) {
 	var seedURL = null;
 	
@@ -147,15 +151,18 @@ function getSeedURL(that) {
 
 function createPhrase(phrase) {
 	var newPhrase = "";
+	//console.log("createPhrase("+phrase+")");
 	if ((typeof phrase == 'string' || phrase instanceof String) && phrase != "") {
-		
+		//console.log("createPhrase - OK");
 	} else {
-		phrase.toString();
+		//console.log("createPhrase - toString()");
+		phrase = phrase.toString();
 	}
 	
 	try {
 		var words = phrase.replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()]/g,"").toLowerCase().split(/\s+/);
 	} catch (e) {
+		//console.log("createPhrase() Exception! ["+e+"]");
 		return newPhrase;
 	}
 	words = words.filter(isPreposistion);

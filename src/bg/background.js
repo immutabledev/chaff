@@ -132,6 +132,24 @@ function onStorageEvent(e) {
 		case "store.settings.idleTime":
 			setIdleTime();
 			break;
+		
+		case "store.settings.minTimeBetweenClicks":
+			var newValue = parseInt(e.newValue.replace(/\"/g, ""));
+			console.log("New minTimeBetweenClicks: ["+newValue+"]");
+			if (isNaN(newValue) || newValue < 0 || newValue > 200 || newValue > settings.get("maxTimeBetweenClicks")) {
+				console.log("Defaulting minTimeBetweenClicks: ["+DEFAULTS.minTimeBetweenClicks+"]");
+				settings.set("minTimeBetweenClicks", DEFAULTS.minTimeBetweenClicks);
+			} 	
+			break;
+			
+		case "store.settings.maxTimeBetweenClicks":
+			var newValue = parseInt(e.newValue.replace(/\"/g, ""));
+			console.log("New maxTimeBetweenClicks: ["+newValue+"]");
+			if (isNaN(newValue) || newValue < 0 || newValue > 200 || newValue < settings.get("minTimeBetweenClicks")) {
+				console.log("Defaulting maxTimeBetweenClicks: ["+DEFAULTS.maxTimeBetweenClicks+"]");
+				settings.set("maxTimeBetweenClicks", DEFAULTS.maxTimeBetweenClicks);
+			} 	
+			break;
 			
 		case "store.settings.website1":
 		case "store.settings.website2":
@@ -249,6 +267,7 @@ function beginBrowsing() {
 
 function browse(url) {
 	startBrowseTimeout();
+	console.log("Browsing To: ["+url+"]");
 	chrome.tabs.update(tabId, {url: url});	
 }
 
