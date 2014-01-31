@@ -111,6 +111,7 @@ function init() {
 	
 	SeedServiceInitialized = false;
 	SeedService = new Seed();
+	SeedService.setSettings(settings.toObject());
 	
 	gatherSeedURLs();
 	
@@ -134,7 +135,7 @@ function onStorageEvent(e) {
 			break;
 		
 		case "store.settings.minTimeBetweenClicks":
-			var newValue = parseInt(e.newValue.replace(/\"/g, ""));
+			var newValue = parseInt(e.newValue.replace(/\"/g, ""), 10);
 			console.log("New minTimeBetweenClicks: ["+newValue+"]");
 			if (isNaN(newValue) || newValue < 0 || newValue > 200 || newValue > settings.get("maxTimeBetweenClicks")) {
 				console.log("Defaulting minTimeBetweenClicks: ["+DEFAULTS.minTimeBetweenClicks+"]");
@@ -143,11 +144,76 @@ function onStorageEvent(e) {
 			break;
 			
 		case "store.settings.maxTimeBetweenClicks":
-			var newValue = parseInt(e.newValue.replace(/\"/g, ""));
+			var newValue = parseInt(e.newValue.replace(/\"/g, ""), 10);
 			console.log("New maxTimeBetweenClicks: ["+newValue+"]");
 			if (isNaN(newValue) || newValue < 0 || newValue > 200 || newValue < settings.get("minTimeBetweenClicks")) {
 				console.log("Defaulting maxTimeBetweenClicks: ["+DEFAULTS.maxTimeBetweenClicks+"]");
 				settings.set("maxTimeBetweenClicks", DEFAULTS.maxTimeBetweenClicks);
+			} 	
+			break;
+			
+		case "store.settings.searchPhraseMinPercent":
+			var newValue = parseInt(e.newValue.replace(/\"/g, ""), 10);
+			console.log("New searchPhraseMinPercent: ["+newValue+"]");
+			if (isNaN(newValue) || newValue < 1 || newValue > 100 || newValue > settings.get("searchPhraseMaxPercent")) {
+				console.log("Defaulting searchPhraseMinPercent: ["+DEFAULTS.searchPhraseMinPercent+"]");
+				settings.set("searchPhraseMinPercent", DEFAULTS.searchPhraseMinPercent);
+			} 	
+			SeedService.setSettings(settings.toObject());
+			break;
+			
+		case "store.settings.searchPhraseMaxPercent":
+			var newValue = parseInt(e.newValue.replace(/\"/g, ""), 10);
+			console.log("New searchPhraseMaxPercent: ["+newValue+"]");
+			if (isNaN(newValue) || newValue < 1 || newValue > 100 || newValue < settings.get("searchPhraseMinPercent")) {
+				console.log("Defaulting searchPhraseMaxPercent: ["+DEFAULTS.searchPhraseMaxPercent+"]");
+				settings.set("searchPhraseMaxPercent", DEFAULTS.searchPhraseMaxPercent);
+			} 
+			SeedService.setSettings(settings.toObject());	
+			break;
+			
+		case "store.settings.browsingTimeoutMin":
+			var newValue = parseInt(e.newValue.replace(/\"/g, ""), 10);
+			console.log("New browsingTimeoutMin: ["+newValue+"]");
+			if (isNaN(newValue) || newValue < 0 || newValue > 200 || newValue > settings.get("browsingTimeoutMax")) {
+				console.log("Defaulting browsingTimeoutMin: ["+DEFAULTS.browsingTimeoutMin+"]");
+				settings.set("browsingTimeoutMin", DEFAULTS.browsingTimeoutMin);
+			} 	
+			break;
+			
+		case "store.settings.browsingTimeoutMax":
+			var newValue = parseInt(e.newValue.replace(/\"/g, ""), 10);
+			console.log("New browsingTimeoutMax: ["+newValue+"]");
+			if (isNaN(newValue) || newValue < 0 || newValue > 200 || newValue < settings.get("browsingTimeoutMin")) {
+				console.log("Defaulting browsingTimeoutMax: ["+DEFAULTS.browsingTimeoutMax+"]");
+				settings.set("browsingTimeoutMax", DEFAULTS.browsingTimeoutMax);
+			} 	
+			break;
+			
+		case "store.settings.minSiteDepth":
+			var newValue = parseInt(e.newValue.replace(/\"/g, ""), 10);
+			console.log("New minSiteDepth: ["+newValue+"]");
+			if (isNaN(newValue) || newValue < 0 || newValue > 50 || newValue > settings.get("maxSiteDepth")) {
+				console.log("Defaulting minSiteDepth: ["+DEFAULTS.minSiteDepth+"]");
+				settings.set("minSiteDepth", DEFAULTS.minSiteDepth);
+			} 	
+			break;
+			
+		case "store.settings.maxSiteDepth":
+			var newValue = parseInt(e.newValue.replace(/\"/g, ""), 10);
+			console.log("New maxSiteDepth: ["+newValue+"]");
+			if (isNaN(newValue) || newValue < 0 || newValue > 50 || newValue < settings.get("minSiteDepth")) {
+				console.log("Defaulting maxSiteDepth: ["+DEFAULTS.maxSiteDepth+"]");
+				settings.set("maxSiteDepth", DEFAULTS.maxSiteDepth);
+			} 	
+			break;
+			
+		case "store.settings.maxDepth":
+			var newValue = parseInt(e.newValue.replace(/\"/g, ""), 10);
+			console.log("New maxDepth: ["+newValue+"]");
+			if (isNaN(newValue) || newValue < 0 || newValue > 100 || newValue < settings.get("maxSiteDepth")) {
+				console.log("Defaulting maxDepth: ["+DEFAULTS.maxDepth+"]");
+				settings.set("maxDepth", DEFAULTS.maxDepth);
 			} 	
 			break;
 			
@@ -245,11 +311,11 @@ function killTab() {
 function beginBrowsing() {
 	// Initialize Browsing Parameters; TODO: Finish initializing parameters
 	// Number of pages to browse on a particular site
-	BROWSING_PARAMETERS['siteDepth'] = randInt(5, 10);
+	BROWSING_PARAMETERS['siteDepth'] = randInt(settings.get("minSiteDepth"), settings.get("maxSiteDepth"));
 	
 	// Number of pages to visit based upon a seed site
-	BROWSING_PARAMETERS['depth'] =  randInt(Math.ceil(BROWSING_PARAMETERS['siteDepth']*1.5), 20);
-	
+	BROWSING_PARAMETERS['depth'] =  randInt(BROWSING_PARAMETERS['siteDepth'], settings.get("maxDepth"));
+	//console.log("Begin Browsing: ["+settings.get("minSiteDepth")+"],["+settings.get("maxSiteDepth")+"]=["+BROWSING_PARAMETERS['siteDepth']+"] ["+BROWSING_PARAMETERS['depth']+"]");
 	// Clear History
 	history = [];
 	
@@ -273,7 +339,7 @@ function browse(url) {
 
 function startBrowseTimeout() {
 	clearTimeout(browsingTimeout);	
-	browsingTimeout = setTimeout(browseError, 30000+randInt(10,30)*1000);	
+	browsingTimeout = setTimeout(browseError, randInt(settings.get("browsingTimeoutMin"),settings.get("browsingTimeoutMax"))*1000);	
 }
 
 function browseError() {
@@ -441,5 +507,7 @@ function setIdleTime() {
 }
 
 function randInt (min, max) {
+	min = parseInt(min, 10);
+	max = parseInt(max, 10);
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }

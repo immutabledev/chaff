@@ -99,7 +99,6 @@ this.manifest = {
             "name": "website10",
             "type": "text"
         },
-        ,
     	{
             "tab": i18n.get("Tuning"),
             "group": i18n.get("Browsing"),
@@ -121,6 +120,90 @@ this.manifest = {
             "name": "maxTimeBetweenClicks",
             "type": "text",
             "label": "Maximum Time Between Clicks (seconds)",
+            "text": "20"
+        },
+    	{
+            "tab": i18n.get("Tuning"),
+            "group": i18n.get("Searching"),
+            "name": "searchPhrasePercentDesc",
+            "type": "description",
+            "text": "The randomly generated search phrase is based upon existing phrases found from seed sources. Choose the minimum and maximum length of the random search phrase as a percentage of the original phrase length."
+        },
+        {
+            "tab": i18n.get("Tuning"),
+            "group": i18n.get("Searching"),
+            "name": "searchPhraseMinPercent",
+            "type": "text",
+            "label": "Minimum Search Phrase Length Percentage",
+            "text": "20"
+        },
+        {
+            "tab": i18n.get("Tuning"),
+            "group": i18n.get("Searching"),
+            "name": "searchPhraseMaxPercent",
+            "type": "text",
+            "label": "Maximum Search Phrase Length Percentage",
+            "text": "70"
+        },
+    	{
+            "tab": i18n.get("Tuning"),
+            "group": i18n.get("Timeout"),
+            "name": "browsingTimeoutDesc",
+            "type": "description",
+            "text": "The amount of time the extension waits for a random page to load to avoid getting stuck. Setting this too low with slow Internet connections will cause constant restarting."
+        },
+        {
+            "tab": i18n.get("Tuning"),
+            "group": i18n.get("Timeout"),
+            "name": "browsingTimeoutMin",
+            "type": "text",
+            "label": "Minimum Timeout (seconds)",
+            "text": "30"
+        },
+        {
+            "tab": i18n.get("Tuning"),
+            "group": i18n.get("Timeout"),
+            "name": "browsingTimeoutMax",
+            "type": "text",
+            "label": "Maximum Timeout (seconds)",
+            "text": "60"
+        },
+        {
+            "tab": i18n.get("Tuning"),
+            "group": i18n.get("Site Depth"),
+            "name": "siteDepthDesc",
+            "type": "description",
+            "text": "The number of pages to visit on a particular website. This is used to limit how long a single domain is browsed to minimize stale browsing."
+        },
+        {
+            "tab": i18n.get("Tuning"),
+            "group": i18n.get("Site Depth"),
+            "name": "minSiteDepth",
+            "type": "text",
+            "label": "Minimum Pages",
+            "text": "5"
+        },
+        {
+            "tab": i18n.get("Tuning"),
+            "group": i18n.get("Site Depth"),
+            "name": "maxSiteDepth",
+            "type": "text",
+            "label": "Maximum Pages",
+            "text": "10"
+        },
+        {
+            "tab": i18n.get("Tuning"),
+            "group": i18n.get("Total Depth"),
+            "name": "totalDepthDesc",
+            "type": "description",
+            "text": "The maximum number of pages to visit for a particular seed. This value must be equal or greater than Maximum Pages. This directly influences how quickly browsing is restarted with a new seed."
+        },
+        {
+            "tab": i18n.get("Tuning"),
+            "group": i18n.get("Total Depth"),
+            "name": "maxDepth",
+            "type": "text",
+            "label": "Maximum Depth",
             "text": "20"
         }
     ],

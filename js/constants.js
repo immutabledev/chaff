@@ -16,5 +16,12 @@ var DEFAULTS = {
 	"maxTimeBetweenClicks": 20,
 	"removeTabWhenFinished": false,
 	"languageDetectionEnabled": true,
-	"preferredLanguage": "en"
+	"preferredLanguage": "en",
+	"searchPhraseMinPercent": 20,
+	"searchPhraseMaxPercent": 70,
+	"browsingTimeoutMin": 30,
+	"browsingTimeoutMax": 60,
+	"minSiteDepth": 5,
+	"maxSiteDepth": 10,
+	"maxDepth": 20
 };

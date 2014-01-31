@@ -6,7 +6,13 @@ function Seed () {
     this.seedURLs = [];
     
     this.grabBag = [];   
+    
+    this.settings = [];
 };
+
+Seed.prototype.setSettings = function (settings) {
+	this.settings = settings;
+}
 
 Seed.prototype.gatherSeeds = function (callback) {
 	var that = this;
@@ -42,7 +48,7 @@ Seed.prototype.setSeedURLs = function (urls) {
 	this.seedURLs = [];
 	
 	for(var i=0; i<urls.length; i++) {
-		urls[i] = urls[i].trim;
+		urls[i].trim;
 		if (/^http/.test(urls[i])) {
 			console.log("Adding seed URL: ["+urls[i]+"].");
 			this.seedURLs.push(urls[i]);
@@ -75,14 +81,15 @@ Seed.prototype.getSeed = function(callback) {
 			if (this.grabBag.length > 0) {
 				var randomGrabBag = randInt(0, this.grabBag.length-1);
 				var gb = this.grabBag.splice(randomGrabBag, 1);
-				var p = createPhrase(gb);
+				var p = this.createPhrase(gb);
 				console.log("Grab Bag: ["+gb+"]["+p+"]");
 				callback(generateGoogleSearchURL(p));
 				break;	
 			}
 		case 3:
 			// Get a user provided seed URL
-			seedURL = getSeedURL(this);
+			seedURL = this.getUserSeedURL(this);
+			console.log("User Seed URL Selected: ["+seedURL+"]");
 			callback(seedURL);
 			break;
 		
@@ -95,6 +102,52 @@ Seed.prototype.getSearchSeed = function (callback) {
 	console.log("Selected random URL: ["+rssURL+"]");
 	getRandomPhrase(rssURL, callback, this);
 };	
+
+Seed.prototype.createPhrase = function (phrase) {
+	var newPhrase = "";
+	//console.log("createPhrase("+phrase+")");
+	if ((typeof phrase == 'string' || phrase instanceof String) && phrase != "") {
+		//console.log("createPhrase - OK");
+	} else {
+		//console.log("createPhrase - toString()");
+		phrase = phrase.toString();
+	}
+	
+	try {
+		var words = phrase.replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()]/g,"").toLowerCase().split(/\s+/);
+	} catch (e) {
+		//console.log("createPhrase() Exception! ["+e+"]");
+		return newPhrase;
+	}
+	words = words.filter(isPreposistion);
+	words = words.filter(isIndefiniteArticle);
+	var phraseLength = randInt(Math.round(words.length/(100/this.settings.searchPhraseMinPercent)), Math.floor(words.length/(100/this.settings.searchPhraseMaxPercent)));
+	
+	// Ensure phrase is at least 1 word
+	phraseLength = (phraseLength < 1) ? 1 : phraseLength; 
+	
+	//console.log("Phrase Length: ["+phraseLength+"]["+this.settings.searchPhraseMinPercent+"]["+this.settings.searchPhraseMaxPercent+"]");
+	for(var i=0; i<phraseLength; i++) {
+		if (!/^\w/.test(words[i])) break;
+		
+		if (i != 0) newPhrase += " ";
+		
+		newPhrase += words[i];
+	}
+	
+	return newPhrase;	
+};
+
+Seed.prototype.getUserSeedURL = function (callback) {
+	var seedURL = null;
+	
+	if (this.seedURLs.length > 0) {
+		var i = randInt(0, this.seedURLs.length-1);
+		seedURL = this.seedURLs[i];
+	}
+	
+	return seedURL;
+}
 	
 function getRandomPhrase(rssURL, callback, that) {
 	$.ajax({
@@ -128,7 +181,7 @@ function getRandomPhrase(rssURL, callback, that) {
 					console.log("Storing Title to Grab Bag: ["+result.articles[grabBagArticle].title+"]");
 				}
 		
-				callback(createPhrase(title));
+				callback(that.createPhrase(title));
 			}
 		}
 	});	
@@ -147,41 +200,6 @@ function getSeedURL(that) {
 	}
 	
 	return seedURL;
-}
-
-function createPhrase(phrase) {
-	var newPhrase = "";
-	//console.log("createPhrase("+phrase+")");
-	if ((typeof phrase == 'string' || phrase instanceof String) && phrase != "") {
-		//console.log("createPhrase - OK");
-	} else {
-		//console.log("createPhrase - toString()");
-		phrase = phrase.toString();
-	}
-	
-	try {
-		var words = phrase.replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()]/g,"").toLowerCase().split(/\s+/);
-	} catch (e) {
-		//console.log("createPhrase() Exception! ["+e+"]");
-		return newPhrase;
-	}
-	words = words.filter(isPreposistion);
-	words = words.filter(isIndefiniteArticle);
-	var phraseLength = randInt(Math.round(words.length/5), Math.floor(words.length/1.5));
-	
-	// Ensure phrase is at least 1 word
-	phraseLength = (phraseLength < 1) ? 1 : phraseLength; 
-	
-	//console.log("Phrase Length: ["+phraseLength+"]");
-	for(var i=0; i<phraseLength; i++) {
-		if (!/^\w/.test(words[i])) break;
-		
-		if (i != 0) newPhrase += " ";
-		
-		newPhrase += words[i];
-	}
-	
-	return newPhrase;	
 }
 
 function isPreposistion(val) {
