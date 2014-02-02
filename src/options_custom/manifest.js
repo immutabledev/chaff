@@ -37,7 +37,7 @@ this.manifest = {
             "group": i18n.get("Websites"),
             "name": "sourcesWebsiteDesc",
             "type": "description",
-            "text": "These are the websites that are searched to find the random links used for generating Chaff."
+            "text": "These websites are used as a starting point for a browsing session."
         },
         {
             "tab": i18n.get("Sources"),
@@ -100,96 +100,116 @@ this.manifest = {
             "type": "text"
         },
     	{
+            "tab": i18n.get("Sources"),
+            "group": i18n.get("Search Engines"),
+            "name": "searchEnginesDesc",
+            "type": "description",
+            "text": "Select one or more search engines to use when searching for random phrases."
+        },
+        {
+            "tab": i18n.get("Sources"),
+            "group": i18n.get("Search Engines"),
+            "name": "useGoogle",
+            "type": "checkbox",
+            "label": "Google"
+        },
+        {
+            "tab": i18n.get("Sources"),
+            "group": i18n.get("Search Engines"),
+            "name": "useBing",
+            "type": "checkbox",
+            "label": "Bing"
+        },
+        {
+            "tab": i18n.get("Sources"),
+            "group": i18n.get("Search Engines"),
+            "name": "useYahoo",
+            "type": "checkbox",
+            "label": "Yahoo"
+        },
+    	{
             "tab": i18n.get("Tuning"),
             "group": i18n.get("Browsing"),
             "name": "timeBetweenClicksDesc",
             "type": "description",
-            "text": "The next randomly chosen link will be visted at a random time in seconds, choosen within the range defined below."
-        },
-        {
-            "tab": i18n.get("Tuning"),
-            "group": i18n.get("Browsing"),
-            "name": "minTimeBetweenClicks",
-            "type": "text",
-            "label": "Minimum Time Between Clicks (seconds)",
-            "text": "6"
+            "text": "The next page will be visted at a random time in seconds, with a maximum time defined below."
         },
         {
             "tab": i18n.get("Tuning"),
             "group": i18n.get("Browsing"),
             "name": "maxTimeBetweenClicks",
-            "type": "text",
-            "label": "Maximum Time Between Clicks (seconds)",
-            "text": "20"
+            "type": "slider",
+            "label": "Maximum Time Between Clicks",
+            "max": 60,
+            "min": 1,
+            "step": 1,
+            "display": true,
+            "displayModifier": function (value) {
+                return value + " seconds";
+            }
         },
     	{
             "tab": i18n.get("Tuning"),
             "group": i18n.get("Searching"),
             "name": "searchPhrasePercentDesc",
             "type": "description",
-            "text": "The randomly generated search phrase is based upon existing phrases found from seed sources. Choose the minimum and maximum length of the random search phrase as a percentage of the original phrase length."
-        },
-        {
-            "tab": i18n.get("Tuning"),
-            "group": i18n.get("Searching"),
-            "name": "searchPhraseMinPercent",
-            "type": "text",
-            "label": "Minimum Search Phrase Length Percentage",
-            "text": "20"
+            "text": "Randomly generated search phrases are based upon existing phrases found from seed sources. Choose the maximum length of the random search phrase as a percentage of the original phrase length."
         },
         {
             "tab": i18n.get("Tuning"),
             "group": i18n.get("Searching"),
             "name": "searchPhraseMaxPercent",
-            "type": "text",
-            "label": "Maximum Search Phrase Length Percentage",
-            "text": "70"
+            "type": "slider",
+            "label": "Maximum Search Phrase Length",
+            "max": 100,
+            "min": 1,
+            "step": 1,
+            "display": true,
+            "displayModifier": function (value) {
+                return value + "%";
+            }
         },
     	{
             "tab": i18n.get("Tuning"),
             "group": i18n.get("Timeout"),
             "name": "browsingTimeoutDesc",
             "type": "description",
-            "text": "The amount of time the extension waits for a random page to load to avoid getting stuck. Setting this too low with slow Internet connections will cause constant restarting."
-        },
-        {
-            "tab": i18n.get("Tuning"),
-            "group": i18n.get("Timeout"),
-            "name": "browsingTimeoutMin",
-            "type": "text",
-            "label": "Minimum Timeout (seconds)",
-            "text": "30"
-        },
+            "text": "The maximum time Chaff waits for a page to load to avoid getting stuck. Setting this too low with slow Internet connections will cause constant restarting."
+       },
         {
             "tab": i18n.get("Tuning"),
             "group": i18n.get("Timeout"),
             "name": "browsingTimeoutMax",
-            "type": "text",
-            "label": "Maximum Timeout (seconds)",
-            "text": "60"
+            "type": "slider",
+            "label": "Maximum Page Load Timeout",
+            "max": 60,
+            "min": 10,
+            "step": 1,
+            "display": true,
+            "displayModifier": function (value) {
+                return value + " seconds";
+            }
         },
         {
             "tab": i18n.get("Tuning"),
             "group": i18n.get("Site Depth"),
             "name": "siteDepthDesc",
             "type": "description",
-            "text": "The number of pages to visit on a particular website. This is used to limit how long a single domain is browsed to minimize stale browsing."
-        },
-        {
-            "tab": i18n.get("Tuning"),
-            "group": i18n.get("Site Depth"),
-            "name": "minSiteDepth",
-            "type": "text",
-            "label": "Minimum Pages",
-            "text": "5"
+            "text": "The maximum number of pages to visit on a particular domain in a session. This is used to limit how long a single domain is browsed to minimize stale browsing."
         },
         {
             "tab": i18n.get("Tuning"),
             "group": i18n.get("Site Depth"),
             "name": "maxSiteDepth",
-            "type": "text",
+            "type": "slider",
             "label": "Maximum Pages",
-            "text": "10"
+            "max": 20,
+            "min": 1,
+            "step": 1,
+            "display": true,
+            "displayModifier": function (value) {
+                return value + " pages on single domain";
+            }
         },
         {
             "tab": i18n.get("Tuning"),
@@ -202,9 +222,15 @@ this.manifest = {
             "tab": i18n.get("Tuning"),
             "group": i18n.get("Total Depth"),
             "name": "maxDepth",
-            "type": "text",
+            "type": "slider",
             "label": "Maximum Depth",
-            "text": "20"
+            "max": 50,
+            "min": 10,
+            "step": 1,
+            "display": true,
+            "displayModifier": function (value) {
+                return value + " total pages in a session";
+            }
         }
     ],
     "alignment": [

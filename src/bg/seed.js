@@ -8,10 +8,27 @@ function Seed () {
     this.grabBag = [];   
     
     this.settings = [];
+    
+    this.searchEngines = [];
 };
 
 Seed.prototype.setSettings = function (settings) {
 	this.settings = settings;
+	
+	if (this.settings.useGoogle == true) {
+		console.log("Using Google.");
+		this.searchEngines.push(generateGoogleSearchURL);
+	} 
+	
+	if (this.settings.useBing == true) {
+		console.log("Using Bing.");
+		this.searchEngines.push(generateBingSearchURL);
+	} 
+	
+	if (this.settings.useYahoo == true) {
+		console.log("Using Yahoo.");
+		this.searchEngines.push(generateYahooSearchURL);
+	} 
 }
 
 Seed.prototype.gatherSeeds = function (callback) {
@@ -57,6 +74,7 @@ Seed.prototype.setSeedURLs = function (urls) {
 };
 
 Seed.prototype.getSeed = function(callback) {
+	var that = this;
 	var decision = randInt(1,3);
 	//var decision = 1;
 	var seedURL = "";
@@ -66,11 +84,13 @@ Seed.prototype.getSeed = function(callback) {
 			if (this.categoriesGathered) {
 				this.getSearchSeed(
 					function(phrase) {
-						if (phrase == null) {
+						var size = that.searchEngines.length;
+						
+						if (phrase == null || size < 1) {
 							console.log("No seed phrase returned! Retrying.");
 							this.getSeed();
 						} else {
-							callback(generateGoogleSearchURL(phrase));
+							callback(that.searchEngines[randInt(0,size-1)](phrase));
 						}
 					}
 				);
@@ -121,7 +141,8 @@ Seed.prototype.createPhrase = function (phrase) {
 	}
 	words = words.filter(isPreposistion);
 	words = words.filter(isIndefiniteArticle);
-	var phraseLength = randInt(Math.round(words.length/(100/this.settings.searchPhraseMinPercent)), Math.floor(words.length/(100/this.settings.searchPhraseMaxPercent)));
+	var searchPhraseMax = Math.floor(words.length/(100/this.settings.searchPhraseMaxPercent));
+	var phraseLength = randInt(Math.floor(searchPhraseMax*this.settings.searchPhraseVariance), searchPhraseMax);
 	
 	// Ensure phrase is at least 1 word
 	phraseLength = (phraseLength < 1) ? 1 : phraseLength; 
@@ -189,6 +210,14 @@ function getRandomPhrase(rssURL, callback, that) {
 
 function generateGoogleSearchURL(phrase) {
 	return "http://www.google.com/search?q="+encodeURIComponent(phrase);	
+}
+
+function generateBingSearchURL(phrase) {
+	return "http://www.bing.com/search?q="+encodeURIComponent(phrase);
+}
+
+function generateYahooSearchURL(phrase) {
+	return "https://search.yahoo.com/search?p="+encodeURIComponent(phrase);
 }
 
 function getSeedURL(that) {

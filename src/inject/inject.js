@@ -41,8 +41,9 @@ for(var i=0; i<linksOnPage.length; ++i) {
 if (links.length > 0) {
 	var selectedLink = randInt(0, links.length-1);
 
-	var delay = randInt(scriptOptions.minTimeBetweenClicks*clickFactor,scriptOptions.maxTimeBetweenClicks*clickFactor)*1000;
-	console.log("Using Delays: ["+scriptOptions.minTimeBetweenClicks+"]["+scriptOptions.maxTimeBetweenClicks+"]");
+	var maxTime = Math.round(scriptOptions.maxTimeBetweenClicks*clickFactor);
+	var delay = randInt(Math.floor(maxTime*scriptOptions.timeBetweenClicksVariance*clickFactor), maxTime)*1000;
+	console.log("Using Delay: ["+scriptOptions.maxTimeBetweenClicks+"]");
 	console.log("New URL: ["+links[selectedLink]+"] in "+delay+"ms");
 	var newPageTimeout = setTimeout(
 		function() {
