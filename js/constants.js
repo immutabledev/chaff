@@ -8,7 +8,7 @@ var DEFAULTS = {
 	"website4": "http://www.drudgereport.com",
 	"website5": "http://www.msn.com",
 	"website6": "http://www.wired.com",
-	"website7": "",
+	"website7": "https://www.reddit.com",
 	"website8": "",
 	"website9": "",
 	"website10": "",
@@ -26,5 +26,6 @@ var DEFAULTS = {
 	"maxDepth": 20,
 	"useGoogle": true,
 	"useBing": false,
-	"useYahoo": false
+	"useYahoo": false,
+	"useBookmarks": true
 };

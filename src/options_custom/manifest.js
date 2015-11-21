@@ -127,6 +127,20 @@ this.manifest = {
             "type": "checkbox",
             "label": "Yahoo"
         },
+        {
+            "tab": i18n.get("Sources"),
+            "group": i18n.get("Bookmarks"),
+            "name": "bookmarksDesc",
+            "type": "description",
+            "text": "Bookmarks can also be used as a source."
+        },
+        {
+            "tab": i18n.get("Sources"),
+            "group": i18n.get("Bookmarks"),
+            "name": "useBookmarks",
+            "type": "checkbox",
+            "label": "Use Bookmarks"
+        },
     	{
             "tab": i18n.get("Tuning"),
             "group": i18n.get("Browsing"),

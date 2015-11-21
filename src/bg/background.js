@@ -8,6 +8,7 @@ var manualProcessing;
 var autoMode;
 
 var seedURLs;
+var useBookmarks;
 
 var tabId;
 var currentTab;
@@ -102,6 +103,8 @@ function init() {
 	
 	autoMode = settings.get("autoMode");
 	
+	useBookmarks = settings.get("useBookmarks");
+	
 	tabId = undefined;
 	currentTab = undefined;
 	
@@ -151,6 +154,7 @@ function onStorageEvent(e) {
 		case "store.settings.website8":
 		case "store.settings.website9":
 		case "store.settings.website10":
+		case "store.settings.useBookmarks":
 			gatherSeedURLs();
 			break;
 	}
@@ -413,14 +417,37 @@ function saveHistory() {
 }
 
 function gatherSeedURLs() {
-	var seedURLs = [];
+	seedURLs = [];
 	
 	for(i=1; i<=10; i++) {
 		seedURLs.push(settings.get("website"+i));
 	}
 	
+	if (useBookmarks) {
+		chrome.bookmarks.getTree(processBookmarks);
+	} else {
+		SeedService.setSeedURLs(seedURLs);
+	}
+}
+
+function processBookmarks(bookmarks) {
+	// recursively gather all bookmarks
+    saveBookmarkURLs(bookmarks);
+		
 	SeedService.setSeedURLs(seedURLs);
-	console.log("Seed URLs gathered.");
+}
+
+function saveBookmarkURLs(bookmarks) {
+    for (var i =0; i < bookmarks.length; i++) {
+        var bookmark = bookmarks[i];
+        if (bookmark.url) {
+            seedURLs.push(bookmark.url);
+        }
+
+        if (bookmark.children) {
+            saveBookmarkURLs(bookmark.children);
+        }
+    }
 }
 
 function setSeedSettings() {
