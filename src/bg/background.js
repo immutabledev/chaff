@@ -21,7 +21,7 @@ var historyAnalyzedLastPass;
 // Last URL used during a Browsing Timeout. Used to get out of a Browse Timeout loop.
 var browseTimeoutNewURL;
 
-var history;
+var historyURLs = [];
 
 var BROWSING_PARAMETERS = [];
 
@@ -119,11 +119,7 @@ function init() {
 	
 	gatherSeedURLs();
 	
-	SeedService.gatherSeeds(
-		function(success) {
-				SeedServiceInitialized = success;			
-		}
-	);       
+	SeedServiceInitialized = true;			      
 }
 
 function onStorageEvent(e) {
@@ -245,7 +241,7 @@ function beginBrowsing() {
 	BROWSING_PARAMETERS['depth'] =  randInt(BROWSING_PARAMETERS['siteDepth'], settings.get("maxDepth"));
 	//console.log("Begin Browsing: ["+settings.get("minSiteDepth")+"],["+settings.get("maxSiteDepth")+"]=["+BROWSING_PARAMETERS['siteDepth']+"] ["+BROWSING_PARAMETERS['depth']+"]");
 	// Clear History
-	history = [];
+	historyURLs = [];
 	
 	SeedService.getSeed(
 		function(url) {
@@ -271,12 +267,12 @@ function startBrowseTimeout() {
 }
 
 function browseError() {
-	var browseTimeoutNewURLtmp = history.pop(); // This one is the bad URL
-	browseTimeoutNewURLtmp = history.pop();
+	var browseTimeoutNewURLtmp = historyURLs.pop(); // This one is the bad URL
+	browseTimeoutNewURLtmp = historyURLs.pop();
 	
 	if (browseTimeoutNewURLtmp == browseTimeoutNewURL) {
 		console.log("!!Browse Timeout: Timed out from same URL last time. Backing up one more. ["+browseTimeoutNewURLtmp+"] == ["+browseTimeoutNewURL+"]")
-		browseTimeoutNewURLtmp = history.pop();	
+		browseTimeoutNewURLtmp = historyURLs.pop();	
 	}
 	
 	browseTimeoutNewURL = browseTimeoutNewURLtmp;
@@ -296,13 +292,13 @@ function tabUpdated(tab) {
 		currentTab = tab;
 		
 		// If the browsing history has exceeded the pre-determined depth, begin again with a new seed
-		if (history.length > BROWSING_PARAMETERS['depth']) {
+		if (historyURLs.length > BROWSING_PARAMETERS['depth']) {
 			console.log("!!!Browsing Depth of ["+BROWSING_PARAMETERS['depth']+"] exceeded. Reseeding.");
 			beginBrowsing();
 		}
 		
 		// TODO: If detected language of page isn't desired, back up
-	  	chrome.tabs.detectLanguage(tabId, 
+	  	/*chrome.tabs.detectLanguage(tabId, 
 	  		function(language) {
 	  			if (settings.get("languageDetectionEnabled")) {
 	    			console.log("Tab Language: ["+language+"]");
@@ -315,6 +311,7 @@ function tabUpdated(tab) {
 	    			}
 	    		}
 	  		});
+	  	*/
 		
 		// Analyze the browsing history to determine if a change in behavior is necessary
 		var alternateURL = "";
@@ -345,12 +342,12 @@ function analyzeHistory(currentURL) {
 	var status = "";
 	
 	// See if the browsing history indicates the script is stuck on the same website for too long
-	if (history.length > BROWSING_PARAMETERS['siteDepth']) {
+	if (historyURLs.length > BROWSING_PARAMETERS['siteDepth']) {
 		var tld = getDomain(currentURL);
 		var count = 0;
 		console.log("Analyzing History [Staleness]: Domain ["+tld+"], Depth ["+BROWSING_PARAMETERS['siteDepth']+"].");
-		for(var i = history.length-1; i>=0; i--) {
-			var domain = getDomain(history[i]);
+		for(var i = historyURLs.length-1; i>=0; i--) {
+			var domain = getDomain(historyURLs[i]);
 			//console.log(">>Found Domain: ["+domain+"]");	
 			if (domain == tld) {
 				count++;
@@ -362,9 +359,9 @@ function analyzeHistory(currentURL) {
 			if (count > BROWSING_PARAMETERS['siteDepth']) {
 				console.log(">>>>More than ["+BROWSING_PARAMETERS['siteDepth']+"] matches for domain ["+tld+"].");
 				for(var j = i; j>=0; j--) {
-					status = history[j];
+					status = historyURLs[j];
 
-					if (getDomain(history[j]) != tld) break;	
+					if (getDomain(historyURLs[j]) != tld) break;	
 				}
 				
 				break;
@@ -411,8 +408,8 @@ function inject() {
 // Remeber the links we've been to
 function saveHistory() {
 	if (currentTab != undefined) {
-		history.push(currentTab.url);
-		console.log("URL ["+currentTab.url+"] saved in History, depth ["+history.length+"].");
+		historyURLs.push(currentTab.url);
+		console.log("URL ["+currentTab.url+"] saved in History, depth ["+historyURLs.length+"].");
 	}	
 }
 

@@ -10,6 +10,10 @@ function Seed () {
     this.settings = [];
     
     this.searchEngines = [];
+    
+    this.FEED_URLS = [
+                      "https://news.google.com/news?cf=all&hl=en&pz=1&ned=us&output=rss"
+                     ];
 };
 
 Seed.prototype.setSettings = function (settings) {
@@ -30,31 +34,6 @@ Seed.prototype.setSettings = function (settings) {
 		this.searchEngines.push(generateYahooSearchURL);
 	} 
 }
-
-Seed.prototype.gatherSeeds = function (callback) {
-	var that = this;
-	
-	$.ajax({
-		url: "http://api.feedzilla.com/v1/subcategories.json",
-		type: 'GET',
-		dataType: 'json',
-		error: function() {
-    		console.log("!!Error gathering categories from Feedzilla.");
-    		callback(false);
-		},
-		success: function(result) {
-			var tmp = [];
-    		for(var i=0; i<result.length; i++) {
-        		tmp.push({ "category_id": result[i].category_id, "subcategory_id": result[i].subcategory_id });  
-        		//console.log("["+result[i].category_id+"]["+result[i].subcategory_id+"]");
-    		}
-    		
-    		//console.log("tmp length: ["+tmp.length+"]");
-    		that.setCategories(tmp);
-    		callback(true);
-		} 
-	});
-};
 
 Seed.prototype.setCategories = function (cats) {
 	this.categories = cats;	
@@ -117,10 +96,8 @@ Seed.prototype.getSeed = function(callback) {
 };
 
 Seed.prototype.getSearchSeed = function (callback) {
-	var i = randInt(0, this.categories.length-1);
-	var rssURL = "http://api.feedzilla.com/v1/categories/"+this.categories[i].category_id+"/subcategories/"+this.categories[i].subcategory_id+"/articles.json";
-	console.log("Selected random URL: ["+rssURL+"]");
-	getRandomPhrase(rssURL, callback, this);
+    var i = randInt(0, this.FEED_URLS.length-1);
+	getRandomPhrase(FEED_URLS[i], callback, this);
 };	
 
 Seed.prototype.createPhrase = function (phrase) {
@@ -171,41 +148,39 @@ Seed.prototype.getUserSeedURL = function (callback) {
 }
 	
 function getRandomPhrase(rssURL, callback, that) {
-	$.ajax({
-		url: rssURL,
-		type: 'GET',
-		dataType: 'json',
-		error: function() {
-    		console.log("!!Error gathering articles from Feedzilla with URL ["+rssURL+"].");
-    		that.getSearchSeed(callback);
-		},
-		success: function(result) {
-			var numOfArticles = result.articles.length;
-			//console.log("Number of Articles: ["+numOfArticles+"]");
-			if (numOfArticles == 0) {
-				// No articles found, so let's try again
-				console.log("No Seed articles found, trying again.");
-				that.getSearchSeed(callback);	
-			} else {
-				var randomArticle = randInt(0,result.articles.length-1);
-				var title = result.articles[randomArticle].title;
-				console.log("Random Article Title: ["+title+"]");
-				
-				// Get another article for the Grab Bag
-				if (result.articles.length > 1) {
-					var grabBagArticle;
-					do {
-						grabBagArticle = randInt(0,result.articles.length-1);
-					} while (grabBagArticle == randomArticle);
-					
-					that.grabBag.push(result.articles[grabBagArticle].title);
-					console.log("Storing Title to Grab Bag: ["+result.articles[grabBagArticle].title+"]");
-				}
-		
-				callback(that.createPhrase(title));
-			}
-		}
-	});	
+    var articles = [];
+    
+    $.get(rssURL, function (data) {
+        $(data).find("item").each(function () {
+            var el = $(this);
+            articles.push(el.find("title"));
+        });
+    });
+    
+    var numOfArticles = result.articles.length;
+    console.log("Number of Articles: ["+numOfArticles+"]");
+    if (numOfArticles == 0) {
+        // No articles found, so let's try again
+        console.log("No Seed articles found, trying again.");
+        that.getSearchSeed(callback);	
+    } else {
+        var randomArticle = randInt(0,result.articles.length-1);
+        var title = result.articles[randomArticle].title;
+        console.log("Random Article Title: ["+title+"]");
+        
+        // Get another article for the Grab Bag
+        if (result.articles.length > 1) {
+            var grabBagArticle;
+            do {
+                grabBagArticle = randInt(0,result.articles.length-1);
+            } while (grabBagArticle == randomArticle);
+            
+            that.grabBag.push(result.articles[grabBagArticle].title);
+            console.log("Storing Title to Grab Bag: ["+result.articles[grabBagArticle].title+"]");
+        }
+
+        callback(that.createPhrase(title));
+    }
 }
 
 function generateGoogleSearchURL(phrase) {
