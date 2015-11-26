@@ -1,6 +1,6 @@
 var DEFAULTS = {
 	"processingEnabled": true,
-	"autoMode": true,
+	"autoMode": false,
 	"idleTime": "1", 
 	"website1": "http://news.google.com",
 	"website2": "http://www.yahoo.com",

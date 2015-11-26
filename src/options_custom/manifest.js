@@ -143,7 +143,7 @@ this.manifest = {
         },
     	{
             "tab": i18n.get("Tuning"),
-            "group": i18n.get("Browsing"),
+            "group": i18n.get("Browsing Speed"),
             "name": "timeBetweenClicksDesc",
             "type": "description",
             "text": "The next page will be visted at a random time in seconds, with a maximum time defined below."

@@ -1,8 +1,5 @@
 
 function Seed () {
-    this.categories = [];
-    this.categoriesGathered = false;
-    
     this.seedURLs = [];
     
     this.grabBag = [];   
@@ -35,11 +32,6 @@ Seed.prototype.setSettings = function (settings) {
 	} 
 }
 
-Seed.prototype.setCategories = function (cats) {
-	this.categories = cats;	
-	this.categoriesGathered = true;
-};
-
 Seed.prototype.setSeedURLs = function (urls) {
 	this.seedURLs = [];
 	
@@ -60,44 +52,47 @@ Seed.prototype.getSeed = function(callback) {
 	
 	switch (decision) {
 		case 1:
-			if (this.categoriesGathered) {
-				this.getSearchSeed(
-					function(phrase) {
-						var size = that.searchEngines.length;
-						
-						if (phrase == null || size < 1) {
-							console.log("No seed phrase returned! Retrying.");
-							this.getSeed();
-						} else {
-							callback(that.searchEngines[randInt(0,size-1)](phrase));
-						}
-					}
-				);
-				break;
-			}
+            console.log("[GetSeed] Search Engine.");
+            this.getSearchSeed(
+                function(phrase) {
+                    var size = that.searchEngines.length;
+                    
+                    if (phrase == null || size < 1) {
+                        console.log("[GetSeed] >>No seed phrase returned! Retrying.");
+                        callback(null);
+                    } else {
+                        callback(that.searchEngines[randInt(0,size-1)](phrase));
+                    }
+                }
+            );
+            break;
 		case 2:
-			console.log("Grab Bag Title Selected. ["+this.grabBag.length+"]");
+			console.log("[GetSeed] Grab Bag. ["+this.grabBag.length+"]");
 			if (this.grabBag.length > 0) {
 				var randomGrabBag = randInt(0, this.grabBag.length-1);
 				var gb = this.grabBag.splice(randomGrabBag, 1);
 				var p = this.createPhrase(gb);
-				console.log("Grab Bag: ["+gb+"]["+p+"]");
+				console.log("[GetSeed] >>Grab Bag: ["+gb+"]["+p+"]");
 				callback(generateGoogleSearchURL(p));
-				break;	
-			}
+			} else {
+                console.log("[GetSeed] >>Nothing in Grab Bag! Retrying.");
+                callback(null);
+            }
+            break;
 		case 3:
 			// Get a user provided seed URL
+            console.log("[GetSeed] User Seed.");
 			seedURL = this.getUserSeedURL(this);
-			console.log("User Seed URL Selected: ["+seedURL+"]");
-			callback(seedURL);
+            
+            console.log("[GetSeed] >>User Seed URL Selected: ["+seedURL+"]");
+            callback(seedURL);
 			break;
-		
 	}	
 };
 
 Seed.prototype.getSearchSeed = function (callback) {
     var i = randInt(0, this.FEED_URLS.length-1);
-	getRandomPhrase(FEED_URLS[i], callback, this);
+	getRandomPhrase(this.FEED_URLS[i], callback, this);
 };	
 
 Seed.prototype.createPhrase = function (phrase) {
@@ -153,34 +148,37 @@ function getRandomPhrase(rssURL, callback, that) {
     $.get(rssURL, function (data) {
         $(data).find("item").each(function () {
             var el = $(this);
-            articles.push(el.find("title"));
+            var title = el.find("title").text();
+            console.log("Articles: ["+title+"]");
+            articles.push(title);
         });
-    });
-    
-    var numOfArticles = result.articles.length;
-    console.log("Number of Articles: ["+numOfArticles+"]");
-    if (numOfArticles == 0) {
-        // No articles found, so let's try again
-        console.log("No Seed articles found, trying again.");
-        that.getSearchSeed(callback);	
-    } else {
-        var randomArticle = randInt(0,result.articles.length-1);
-        var title = result.articles[randomArticle].title;
-        console.log("Random Article Title: ["+title+"]");
         
-        // Get another article for the Grab Bag
-        if (result.articles.length > 1) {
-            var grabBagArticle;
-            do {
-                grabBagArticle = randInt(0,result.articles.length-1);
-            } while (grabBagArticle == randomArticle);
+        var numOfArticles = articles.length;
+        console.log("Number of Articles: ["+numOfArticles+"]");
+        if (numOfArticles == 0) {
+            // No articles found, so let's try again
+            console.log("No Seed articles found, trying again.");
+            //that.getSearchSeed(callback);
+            callback(null);
+        } else {
+            var randomArticle = randInt(0,articles.length-1);
+            var title = articles[randomArticle];
+            console.log("Random Article Title: ["+title+"]");
             
-            that.grabBag.push(result.articles[grabBagArticle].title);
-            console.log("Storing Title to Grab Bag: ["+result.articles[grabBagArticle].title+"]");
+            // Get another article for the Grab Bag
+            if (articles.length > 1) {
+                var grabBagArticle;
+                do {
+                    grabBagArticle = randInt(0,articles.length-1);
+                } while (grabBagArticle == randomArticle);
+                
+                that.grabBag.push(articles[grabBagArticle]);
+                console.log("Storing Title to Grab Bag: ["+articles[grabBagArticle]+"]");
+            }
+    
+            callback(that.createPhrase(title));
         }
-
-        callback(that.createPhrase(title));
-    }
+    });
 }
 
 function generateGoogleSearchURL(phrase) {
