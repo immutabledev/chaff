@@ -22,12 +22,13 @@ if (/^https?:\/\/www\.google\.com\/search/.test(window.location)) {
 // Disable autocomplete on page so accounts aren't automatically logged into
 var inputnodes = document.getElementsByTagName('input');    
 for(var i=0;i<inputnodes.length;i++){       
-	inputnodes[i].setAttribute('autocomplete','off');
+	inputnodes[i].setAttribute('autocomplete','blah');
+	inputnodes[i].setAttribute('name',' ');
 }
 
 var formnodes = document.getElementsByTagName("form");    
 for(var i=0;i<formnodes.length;i++){                    
-	formnodes[i].setAttribute('autocomplete','off');
+	formnodes[i].setAttribute('autocomplete','blah');
 } 
 
 var linksOnPage = document.getElementsByTagName('a');
@@ -48,6 +49,7 @@ for(var i=0; i<linksOnPage.length; ++i) {
 	}
 }
 
+console.log("Links Found: ["+links.length+"] of ["+linksOnPage.length+"]");
 
 if (links.length > 0) {
 	var selectedLink = randInt(0, links.length-1);

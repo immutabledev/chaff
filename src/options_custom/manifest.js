@@ -150,7 +150,7 @@ this.manifest = {
         },
         {
             "tab": i18n.get("Tuning"),
-            "group": i18n.get("Browsing"),
+            "group": i18n.get("Browsing Speed"),
             "name": "maxTimeBetweenClicks",
             "type": "slider",
             "label": "Maximum Time Between Clicks",
