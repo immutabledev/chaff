@@ -15,6 +15,11 @@ function Seed () {
 
 Seed.prototype.setSettings = function (settings) {
 	this.settings = settings;
+    
+    if (this.settings.useDDG == true) {
+		console.log("Using Duck Duck Go.");
+		this.searchEngines.push(generateDDGSearchURL);
+	} 
 	
 	if (this.settings.useGoogle == true) {
 		console.log("Using Google.");
@@ -73,7 +78,14 @@ Seed.prototype.getSeed = function(callback) {
 				var gb = this.grabBag.splice(randomGrabBag, 1);
 				var p = this.createPhrase(gb);
 				console.log("[GetSeed] >>Grab Bag: ["+gb+"]["+p+"]");
-				callback(generateGoogleSearchURL(p));
+                var size = that.searchEngines.length;
+                if (p == null || size < 1) {
+                    console.log("[GetSeed] >>No Grab Bag phrase returned! Retrying.");
+                    callback(null);
+                } else {
+                    callback(that.searchEngines[randInt(0,size-1)](p));
+                }
+
 			} else {
                 console.log("[GetSeed] >>Nothing in Grab Bag! Retrying.");
                 callback(null);
@@ -181,8 +193,12 @@ function getRandomPhrase(rssURL, callback, that) {
     });
 }
 
+function generateDDGSearchURL(phrase) {
+	return "https://duckduckgo.com/?q="+encodeURIComponent(phrase);	
+}
+
 function generateGoogleSearchURL(phrase) {
-	return "http://www.google.com/search?q="+encodeURIComponent(phrase);	
+	return "https://www.google.com/search?q="+encodeURIComponent(phrase);	
 }
 
 function generateBingSearchURL(phrase) {

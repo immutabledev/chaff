@@ -109,6 +109,13 @@ this.manifest = {
         {
             "tab": i18n.get("Sources"),
             "group": i18n.get("Search Engines"),
+            "name": "useDDG",
+            "type": "checkbox",
+            "label": "Duck Duck Go"
+        },
+        {
+            "tab": i18n.get("Sources"),
+            "group": i18n.get("Search Engines"),
             "name": "useGoogle",
             "type": "checkbox",
             "label": "Google"

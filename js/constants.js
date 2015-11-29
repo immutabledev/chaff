@@ -24,7 +24,8 @@ var DEFAULTS = {
 	"siteDepthVariance": 0.6,
 	"maxSiteDepth": 10,
 	"maxDepth": 20,
-	"useGoogle": true,
+	"useDDG": true,
+	"useGoogle": false,
 	"useBing": false,
 	"useYahoo": false,
 	"useBookmarks": true
