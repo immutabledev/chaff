@@ -86,6 +86,7 @@ chrome.tabs.onUpdated.addListener(
 	function(updatedTabId, changeInfo, tab) {
 		if (updatedTabId != tabId || changeInfo.status != 'complete') return;
 		console.log("Tab Updated: ["+updatedTabId+"] ["+changeInfo.status+"]");
+		
 		tabUpdated(tab);
 	}	
 );
@@ -183,7 +184,7 @@ function startProcessing() {
 		
 		console.log("Creating Tab...");
 		// Create a new tab and store the Id for later use
-		chrome.tabs.create({"active": true}, function (tab) {
+		chrome.tabs.create({"active": true, "index": 0, "pinned": true}, function (tab) {
 			console.log("Tab Created: ["+tab.id+"]");
 			tabId = tab.id;
 			
@@ -201,6 +202,7 @@ function stopProcessing() {
 		// Clear Timeouts
 		if (browsingTimeout) clearTimeout(browsingTimeout);
 		if (historyTimeout) clearTimeout(historyTimeout);
+		if (browseTimeoutNewURL) clearTimeout(browseTimeoutNewURL);
 		
 		stopScript();
 	}
@@ -210,10 +212,10 @@ function stopProcessing() {
 function stopScript() {
 	console.log("Stopping Script...");
 	chrome.tabs.executeScript(tabId, { code: 'clearTimeout(newPageTimeout);'}, function(){
-	//chrome.tabs.sendMessage(tabId, "StopScript", function(response) {
-	//	console.log("Inject Script Stopped: ["+response+"]");
-		
-		killTab();
+		chrome.tabs.sendMessage(tabId, "StopScript", function(response) {
+			console.log("Inject Script Stopped: ["+response+"]");
+			killTab();
+		});
 	});	
 }
 
@@ -258,7 +260,7 @@ function beginBrowsing() {
 function browse(url) {
 	startBrowseTimeout();
 	console.log("Browsing To: ["+url+"]");
-	chrome.tabs.update(tabId, {url: url});	
+	chrome.tabs.update(tabId, {url: url, muted: true});	
 }
 
 function startBrowseTimeout() {
@@ -298,20 +300,19 @@ function tabUpdated(tab) {
 		}
 		
 		// TODO: If detected language of page isn't desired, back up
-	  	/*chrome.tabs.detectLanguage(tabId, 
+	  	chrome.tabs.detectLanguage(tabId, 
 	  		function(language) {
 	  			if (settings.get("languageDetectionEnabled")) {
 	    			console.log("Tab Language: ["+language+"]");
 	    			
-	    			var languageToDetect = settings.get("preferredLanguage");
-	    			var langExp = new RegExp("^"+languageToDetect, "i");
-	    			if (!langExp.test(language.toLower())) {
-	    				console.log("A different language detected, backing up.")
-	    				browseError();
-	    			}
+	    			//var languageToDetect = settings.get("preferredLanguage");
+	    			//var langExp = new RegExp("^"+languageToDetect, "i");
+	    			//if (!langExp.test(language.toLower())) {
+	    			//	console.log("A different language detected, backing up.")
+	    			//	browseError();
+	    			//}
 	    		}
 	  		});
-	  	*/
 		
 		// Analyze the browsing history to determine if a change in behavior is necessary
 		var alternateURL = "";
@@ -386,26 +387,16 @@ function getDomain(url) {
 function inject() {
 	console.log("Injecting into tab ["+tabId+"].");
 	try {
-		//console.log(">>Injecting RemoveAudio.");
-		//chrome.tabs.executeScript(tabId, { file: "src/inject/removeAudio.js", allFrames: true, runAt: "document_end" },
-			//function() {
-				//console.log(">>Injecting configuration.");
-				chrome.tabs.executeScript(tabId, { code: "var scriptOptions = { timeBetweenClicksVariance: "+settings.get("timeBetweenClicksVariance")+", maxTimeBetweenClicks: "+settings.get("maxTimeBetweenClicks")+" };" }, 
+		chrome.tabs.executeScript(tabId, { code: "var scriptOptions = { timeBetweenClicksVariance: "+settings.get("timeBetweenClicksVariance")+", maxTimeBetweenClicks: "+settings.get("maxTimeBetweenClicks")+" };" }, 
+			function() {
+				//console.log(">>Injecting Chaff.");
+				chrome.tabs.executeScript(tabId, { file: "src/inject/inject.js" }, 
 					function() {
-						//console.log(">>Injecting Chaff.");
-						chrome.tabs.executeScript(tabId, { file: "src/inject/inject.js" }, 
-							function() {
-		    					saveHistory();
-								chrome.tabs.executeScript(tabId, { file: "src/inject/removeAudio.js", allFrames: true, runAt: "document_end" },
-									function() {
-									}
-								);
-	   						}	
-	   					);
-	   				}
-	   			);
-	   		//}	
-	   //);
+						saveHistory();
+					}	
+				);
+			}
+		);
 	} catch(e) {
 		// Let the Browse Timeout occur to handle this case
 		console.log("!!Error occurred when trying to inject into tab.");

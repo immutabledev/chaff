@@ -14,7 +14,7 @@ var DEFAULTS = {
 	"website10": "",
 	"timeBetweenClicksVariance": 0.5,
 	"maxTimeBetweenClicks": 20,
-	"removeTabWhenFinished": false,
+	"removeTabWhenFinished": true,
 	"languageDetectionEnabled": true,
 	"preferredLanguage": "en",
 	"searchPhraseVariance": 0.4,

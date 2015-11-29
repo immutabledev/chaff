@@ -5,7 +5,7 @@ this.manifest = {
     "settings": [
     	{
             "tab": i18n.get("Settings"),
-            "group": i18n.get("Auto Mode"),
+            "group": i18n.get("Idle Chaff"),
             "name": "autoMode",
             "type": "checkbox",
             "label": "Automatically Run after the Idle Time has Transpired"
