@@ -1,17 +1,17 @@
 // SAMPLE
 this.manifest = {
-    "name": "My Extension",
+    "name": "Chaff Settings",
     "icon": "icon.png",
     "settings": [
     	{
-            "tab": i18n.get("Settings"),
+            "tab": i18n.get("Configuration"),
             "group": i18n.get("Idle Chaff"),
             "name": "autoMode",
             "type": "checkbox",
             "label": "Automatically Run after the Idle Time has Transpired"
         },
         {
-            "tab": i18n.get("Settings"),
+            "tab": i18n.get("Configuration"),
             "group": i18n.get("Auto Mode"),
             "name": "idleTime",
             "type": "text",
@@ -19,18 +19,18 @@ this.manifest = {
             "text": "10"
         },
         {
-            "tab": i18n.get("Settings"),
+            "tab": i18n.get("Configuration"),
             "group": i18n.get("Auto Mode"),
             "name": "idleTimeDesc",
             "type": "description",
             "text": "The amount of idle time in minutes that has to transpire before Chaff begins."
         },
         {
-            "tab": i18n.get("Settings"),
+            "tab": i18n.get("Configuration"),
             "group": i18n.get("Tab Behavior"),
             "name": "removeTabWhenFinished",
             "type": "checkbox",
-            "label": "Remove tab created by extension when turned off."
+            "label": "Remove tab created by extension when extension stops running."
         },
     	{
             "tab": i18n.get("Sources"),
