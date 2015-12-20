@@ -1,5 +1,5 @@
 Chaff Chrome Browser Extension
-Version 0.2.0
+Version 0.2.5
 =====
 
 Autonomously browse the Internet in the Chrome Browser using user provided URLs, user Bookmarks, and Random Search Engine queries as a basis to generate random web browsing traffic in order to obfuscate actual web browsing interests from third party monitoring.

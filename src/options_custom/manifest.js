@@ -1,11 +1,11 @@
 // SAMPLE
 this.manifest = {
     "name": "Chaff Settings",
-    "icon": "icon.png",
+    "icon": "chaff_icon_38.png",
     "settings": [
     	{
             "tab": i18n.get("Configuration"),
-            "group": i18n.get("Idle Chaff"),
+            "group": i18n.get("Auto Mode"),
             "name": "autoMode",
             "type": "checkbox",
             "label": "Automatically Run after the Idle Time has Transpired"
@@ -104,7 +104,7 @@ this.manifest = {
             "group": i18n.get("Search Engines"),
             "name": "searchEnginesDesc",
             "type": "description",
-            "text": "Select one or more search engines to use when searching for random phrases."
+            "text": "Select one or more search engines Chaff should use when searching for random phrases."
         },
         {
             "tab": i18n.get("Sources"),
